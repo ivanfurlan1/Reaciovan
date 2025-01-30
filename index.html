@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Reacción Extremo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            transition: background-color 0.8s ease;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        #target {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background-color: transparent;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: opacity 10s ease-in-out;
+            display: none;
+        }
+        #timer, #level {
+            position: absolute;
+            top: 20px;
+            font-size: 24px;
+            color: #333;
+            font-weight: 500;
+        }
+        #timer {
+            left: 20px;
+            display: none;
+        }
+        #level {
+            right: 20px;
+        }
+        #countdown {
+            font-size: 72px;
+            display: none;
+            color: #333;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: pulse 1s infinite;
+        }
+        #restart-button {
+            position: absolute;
+            bottom: 20px;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.3s ease;
+        }
+        #restart-button:hover {
+            background-color: #0056b3;
+        }
+        #results-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 24px;
+            color: #333;
+        }
+        #results-screen h2 {
+            margin-bottom: 20px;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        #results-screen ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #results-screen ul li {
+            margin: 10px 0;
+            font-size: 20px;
+        }
+        @keyframes clickAnimation {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(10); opacity: 0; }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .click-effect {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            animation: clickAnimation 1.2s ease-out;
+        }
+        .game-over {
+            color: #dc3545;
+            font-weight: 700;
+        }
+        .blink-effect {
+            animation: blink 0.5s ease-in-out;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <div id="timer">Tiempo: 0ms</div>
+        <div id="level">Nivel: 1</div>
+        <div id="countdown">3</div>
+        <div id="target"></div>
+        <button id="restart-button">Reiniciar</button>
+        <div id="results-screen">
+            <h2 id="result-title"></h2>
+            <ul id="results-list"></ul>
+            <p id="total-time"></p>
+            <button id="results-restart-button">Reiniciar Juego</button>
+        </div>
+    </div>
+
+    <script>
+        const target = document.getElementById('target');
+        const timerDisplay = document.getElementById('timer');
+        const levelDisplay = document.getElementById('level');
+        const countdownDisplay = document.getElementById('countdown');
+        const gameContainer = document.getElementById('game-container');
+        const restartButton = document.getElementById('restart-button');
+        const resultsScreen = document.getElementById('results-screen');
+        const resultsList = document.getElementById('results-list');
+        const totalTimeDisplay = document.getElementById('total-time');
+        const resultsRestartButton = document.getElementById('results-restart-button');
+        const resultTitle = document.getElementById('result-title');
+        const body = document.body;
+
+        let startTime, endTime, currentLevel = 1, countdown, fadeInterval, delayTimeout;
+        let currentColor = { r: 0, g: 0, b: 0 };
+        let totalTime = 0;
+        let levelTimes = [];
+        let isLevelActive = false;
+        let currentLevelType = 'normal';
+        let originalBackgroundColor = { r: 240, g: 240, b: 240 };
+
+        const FADE_DURATION = 60000;
+
+        const levelSettings = [
+            { type: 'normal' },
+            { type: 'inverted' },
+            { type: 'normal' },
+            { type: 'inverted' },
+            { type: 'normal' },
+            { type: 'inverted' }
+        ];
+
+        function getRandomColor(previousColor) {
+            let newColor;
+            do {
+                newColor = {
+                    r: Math.floor(Math.random() * 256),
+                    g: Math.floor(Math.random() * 256),
+                    b: Math.floor(Math.random() * 256)
+                };
+            } while (colorDifference(previousColor, newColor) < 100); // Asegura una diferencia mínima de 100 en la distancia de color
+            return newColor;
+        }
+
+        function colorDifference(color1, color2) {
+            return Math.sqrt(
+                Math.pow(color1.r - color2.r, 2) +
+                Math.pow(color1.g - color2.g, 2) +
+                Math.pow(color1.b - color2.b, 2)
+            );
+        }
+
+        function startGame() {
+            currentLevel = 1;
+            totalTime = 0;
+            levelTimes = [];
+            body.style.backgroundColor = '#f0f0f0';
+            originalBackgroundColor = { r: 240, g: 240, b: 240 };
+            restartButton.style.display = 'none';
+            resultsScreen.style.display = 'none';
+            timerDisplay.style.display = 'none';
+            clearInterval(countdown);
+            clearInterval(fadeInterval);
+            clearTimeout(delayTimeout);
+            showCountdown();
+        }
+
+        function showCountdown() {
+            let count = 3;
+            currentLevelType = levelSettings[currentLevel - 1].type;
+            levelDisplay.textContent = `Nivel: ${currentLevel}`;
+            
+            if (currentLevel > 1) {
+                timerDisplay.textContent = `Tiempo: ${levelTimes[currentLevel - 2]}ms`;
+                timerDisplay.style.display = 'block';
+            }
+            
+            countdownDisplay.textContent = count;
+            countdownDisplay.style.display = 'block';
+            countdown = setInterval(() => {
+                count--;
+                countdownDisplay.textContent = count;
+                if (count <= 0) {
+                    clearInterval(countdown);
+                    countdownDisplay.style.display = 'none';
+                    timerDisplay.style.display = 'none';
+                    startLevel();
+                }
+            }, 1000);
+        }
+
+        function startLevel() {
+            const delay = Math.random() * 7000;
+            const levelType = levelSettings[currentLevel - 1].type;
+
+            if (levelType === 'normal') {
+                const color = getRandomColor(currentColor);
+                currentColor = color;
+                
+                target.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
+                target.style.top = `${Math.random() * (window.innerHeight - 120)}px`;
+                target.style.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0)`;
+                target.style.display = 'none';
+
+                delayTimeout = setTimeout(() => {
+                    target.style.display = 'block';
+                    const fadeStart = Date.now();
+                    
+                    fadeInterval = setInterval(() => {
+                        const elapsed = Date.now() - fadeStart;
+                        const opacity = Math.min(elapsed / FADE_DURATION, 1);
+                        target.style.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity * 0.6})`;
+                    }, 30);
+
+                    startTime = Date.now();
+                    isLevelActive = true;
+                }, delay);
+            } else {
+                const newColor = getRandomColor(originalBackgroundColor);
+                target.style.backgroundColor = `rgb(${originalBackgroundColor.r}, ${originalBackgroundColor.g}, ${originalBackgroundColor.b})`;
+                target.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
+                target.style.top = `${Math.random() * (window.innerHeight - 120)}px`;
+                target.style.display = 'none';
+
+                delayTimeout = setTimeout(() => {
+                    target.style.display = 'block';
+                    const fadeStart = Date.now();
+                    
+                    fadeInterval = setInterval(() => {
+                        const elapsed = Date.now() - fadeStart;
+                        const progress = Math.min(elapsed / FADE_DURATION, 1);
+                        const r = originalBackgroundColor.r + (newColor.r - originalBackgroundColor.r) * progress;
+                        const g = originalBackgroundColor.g + (newColor.g - originalBackgroundColor.g) * progress;
+                        const b = originalBackgroundColor.b + (newColor.b - originalBackgroundColor.b) * progress;
+                        body.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+                    }, 30);
+
+                    startTime = Date.now();
+                    isLevelActive = true;
+                }, delay);
+            }
+        }
+
+        function gameOver() {
+            isLevelActive = false;
+            clearInterval(fadeInterval);
+            clearTimeout(delayTimeout);
+            target.style.display = 'none';
+            resultTitle.textContent = '¡Has perdido!';
+            resultsScreen.style.display = 'flex';
+            totalTimeDisplay.textContent = `Tiempo total: ${totalTime}ms`;
+        }
+
+        function endGame() {
+            isLevelActive = false;
+            target.style.display = 'none';
+            clearInterval(fadeInterval);
+            resultTitle.textContent = 'Resultados Finales';
+
+            if (currentLevel < levelSettings.length) {
+                currentLevel++;
+                showCountdown();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            resultsList.innerHTML = '';
+            levelTimes.forEach((time, index) => {
+                const li = document.createElement('li');
+                li.textContent = `Nivel ${index + 1}: ${time}ms`;
+                resultsList.appendChild(li);
+            });
+            totalTimeDisplay.textContent = `Tiempo total: ${totalTime}ms`;
+            resultsScreen.style.display = 'flex';
+        }
+
+        gameContainer.addEventListener('click', (e) => {
+            if (!isLevelActive) return;
+            
+            if (e.target === target) {
+                endTime = Date.now();
+                const reactionTime = endTime - startTime;
+                totalTime += reactionTime;
+                levelTimes.push(reactionTime);
+
+                if (currentLevelType === 'normal') {
+                    body.style.backgroundColor = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+                    originalBackgroundColor = currentColor;
+                } else {
+                    const bgColor = window.getComputedStyle(body).backgroundColor;
+                    const [r, g, b] = bgColor.match(/\d+/g).map(Number);
+                    originalBackgroundColor = { r, g, b };
+                }
+
+                target.style.display = 'none';
+                clearInterval(fadeInterval);
+                createClickEffect();
+
+                if (currentLevel < levelSettings.length) {
+                    currentLevel++;
+                    showCountdown();
+                } else {
+                    endGame();
+                }
+            } else {
+                gameOver();
+            }
+        });
+
+        function createClickEffect() {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.style.backgroundColor = currentLevelType === 'normal' 
+                ? `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0.3)`
+                : `rgba(${originalBackgroundColor.r}, ${originalBackgroundColor.g}, ${originalBackgroundColor.b}, 0.3)`;
+            effect.style.left = target.style.left;
+            effect.style.top = target.style.top;
+            gameContainer.appendChild(effect);
+            setTimeout(() => effect.remove(), 1200);
+        }
+
+        restartButton.addEventListener('click', startGame);
+        resultsRestartButton.addEventListener('click', startGame);
+
+        startGame();
+    </script>
+</body>
+</html>
