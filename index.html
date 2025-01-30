@@ -181,7 +181,7 @@
             { type: 'inverted' }
         ];
 
-        function getRandomColor(previousColor) {
+        function getRandomColor(previousColor, level) {
             let newColor;
             do {
                 newColor = {
@@ -189,7 +189,7 @@
                     g: Math.floor(Math.random() * 256),
                     b: Math.floor(Math.random() * 256)
                 };
-            } while (colorDifference(previousColor, newColor) < 100); // Asegura una diferencia mínima de 100 en la distancia de color
+            } while (level < 5 ? colorDifference(previousColor, newColor) < 150 : colorDifference(previousColor, newColor) > 50);
             return newColor;
         }
 
@@ -245,7 +245,7 @@
             const levelType = levelSettings[currentLevel - 1].type;
 
             if (levelType === 'normal') {
-                const color = getRandomColor(currentColor);
+                const color = getRandomColor(currentColor, currentLevel);
                 currentColor = color;
                 
                 target.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
@@ -267,7 +267,7 @@
                     isLevelActive = true;
                 }, delay);
             } else {
-                const newColor = getRandomColor(originalBackgroundColor);
+                const newColor = getRandomColor(originalBackgroundColor, currentLevel);
                 target.style.backgroundColor = `rgb(${originalBackgroundColor.r}, ${originalBackgroundColor.g}, ${originalBackgroundColor.b})`;
                 target.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
                 target.style.top = `${Math.random() * (window.innerHeight - 120)}px`;
@@ -340,9 +340,9 @@
                     body.style.backgroundColor = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
                     originalBackgroundColor = currentColor;
                 } else {
-                    const bgColor = window.getComputedStyle(body).backgroundColor;
-                    const [r, g, b] = bgColor.match(/\d+/g).map(Number);
-                    originalBackgroundColor = { r, g, b };
+                    const newColor = getRandomColor(originalBackgroundColor, currentLevel);
+                    body.style.backgroundColor = `rgb(${newColor.r}, ${newColor.g}, ${newColor.b})`;
+                    originalBackgroundColor = newColor;
                 }
 
                 target.style.display = 'none';
