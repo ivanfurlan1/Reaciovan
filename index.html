@@ -65,15 +65,25 @@
             font-size: 18px;
             font-weight: 500;
             color: #fff;
-            background-color: #007bff;
+            background-color: #ff6f61;
             border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             cursor: pointer;
             display: none;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         #restart-button:hover {
-            background-color: #0056b3;
+            background-color: #ff3b2f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+        #restart-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
         #results-screen {
             position: absolute;
@@ -88,19 +98,65 @@
             flex-direction: column;
             font-size: 24px;
             color: #333;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        #results-screen.show {
+            opacity: 1;
+            transform: scale(1);
         }
         #results-screen h2 {
             margin-bottom: 20px;
             font-size: 36px;
             font-weight: 700;
+            color: #333;
         }
         #results-screen ul {
             list-style-type: none;
             padding: 0;
+            margin: 0;
         }
         #results-screen ul li {
             margin: 10px 0;
             font-size: 20px;
+            color: #555;
+        }
+        #results-screen p {
+            margin: 10px 0;
+            font-size: 20px;
+            color: #555;
+        }
+        #score {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ff6f61;
+            margin-top: 20px;
+        }
+        #results-restart-button {
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+            background-color: #ff6f61;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 30px;
+        }
+        #results-restart-button:hover {
+            background-color: #ff3b2f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+        #results-restart-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
         @keyframes clickAnimation {
             0% { transform: scale(1); opacity: 1; }
@@ -116,6 +172,11 @@
             50% { opacity: 0; }
             100% { opacity: 1; }
         }
+        @keyframes fadeRed {
+            0% { background-color: rgba(255, 0, 0, 0); }
+            50% { background-color: rgba(255, 0, 0, 0.5); }
+            100% { background-color: rgba(255, 0, 0, 0); }
+        }
         .click-effect {
             position: absolute;
             width: 120px;
@@ -130,11 +191,65 @@
         .blink-effect {
             animation: blink 0.5s ease-in-out;
         }
+        .fade-red-effect {
+            animation: fadeRed 1s ease-in-out;
+        }
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 24px;
+            color: #333;
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        #start-screen h2 {
+            margin-bottom: 20px;
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+        }
+        #start-button {
+            width: 120px;
+            height: 120px;
+            background-color: #ff6f61;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 30px;
+        }
+        #start-button:hover {
+            background-color: #ff3b2f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+        }
+        #start-button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
     <div id="game-container">
+        <div id="start-screen">
+            <h2>Test RADC</h2>
+            <div id="start-button"></div>
+        </div>
         <div id="timer">Tiempo: 0ms</div>
         <div id="level">Nivel: 1</div>
         <div id="countdown">3</div>
@@ -144,9 +259,13 @@
             <h2 id="result-title"></h2>
             <ul id="results-list"></ul>
             <p id="total-time"></p>
+            <p id="score"></p>
             <button id="results-restart-button">Reiniciar Juego</button>
         </div>
     </div>
+
+    <!-- Audio para el sonido de clic -->
+    <audio id="click-sound" src="https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3"></audio>
 
     <script>
         const target = document.getElementById('target');
@@ -160,17 +279,25 @@
         const totalTimeDisplay = document.getElementById('total-time');
         const resultsRestartButton = document.getElementById('results-restart-button');
         const resultTitle = document.getElementById('result-title');
+        const scoreDisplay = document.getElementById('score');
         const body = document.body;
+        const clickSound = document.getElementById('click-sound');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
 
         let startTime, endTime, currentLevel = 1, countdown, fadeInterval, delayTimeout;
         let currentColor = { r: 0, g: 0, b: 0 };
         let totalTime = 0;
         let levelTimes = [];
         let isLevelActive = false;
+        let isGameOver = false;
+        let isGameWon = false;
         let currentLevelType = 'normal';
         let originalBackgroundColor = { r: 240, g: 240, b: 240 };
+        let isCountdownActive = false;
 
-        const FADE_DURATION = 60000;
+        const FADE_DURATION = 200000; // Duración base del fade
+        const LEVEL_6_FADE_DURATION = FADE_DURATION * 2; // Duración del fade en el nivel 6
 
         const levelSettings = [
             { type: 'normal' },
@@ -183,13 +310,16 @@
 
         function getRandomColor(previousColor, level) {
             let newColor;
+            const isDark = level % 2 === 1; // Alternar entre oscuro y claro
+
             do {
                 newColor = {
-                    r: Math.floor(Math.random() * 256),
-                    g: Math.floor(Math.random() * 256),
-                    b: Math.floor(Math.random() * 256)
+                    r: Math.floor(Math.random() * 128) + (isDark ? 0 : 128),
+                    g: Math.floor(Math.random() * 128) + (isDark ? 0 : 128),
+                    b: Math.floor(Math.random() * 128) + (isDark ? 0 : 128)
                 };
-            } while (level < 5 ? colorDifference(previousColor, newColor) < 150 : colorDifference(previousColor, newColor) > 50);
+            } while (colorDifference(previousColor, newColor) < 150);
+
             return newColor;
         }
 
@@ -202,6 +332,7 @@
         }
 
         function startGame() {
+            startScreen.style.display = 'none';
             currentLevel = 1;
             totalTime = 0;
             levelTimes = [];
@@ -213,6 +344,8 @@
             clearInterval(countdown);
             clearInterval(fadeInterval);
             clearTimeout(delayTimeout);
+            isGameOver = false;
+            isGameWon = false;
             showCountdown();
         }
 
@@ -228,6 +361,7 @@
             
             countdownDisplay.textContent = count;
             countdownDisplay.style.display = 'block';
+            isCountdownActive = true;
             countdown = setInterval(() => {
                 count--;
                 countdownDisplay.textContent = count;
@@ -235,6 +369,7 @@
                     clearInterval(countdown);
                     countdownDisplay.style.display = 'none';
                     timerDisplay.style.display = 'none';
+                    isCountdownActive = false;
                     startLevel();
                 }
             }, 1000);
@@ -243,6 +378,7 @@
         function startLevel() {
             const delay = Math.random() * 7000;
             const levelType = levelSettings[currentLevel - 1].type;
+            const fadeDuration = currentLevel === 6 ? LEVEL_6_FADE_DURATION : FADE_DURATION;
 
             if (levelType === 'normal') {
                 const color = getRandomColor(currentColor, currentLevel);
@@ -259,7 +395,7 @@
                     
                     fadeInterval = setInterval(() => {
                         const elapsed = Date.now() - fadeStart;
-                        const opacity = Math.min(elapsed / FADE_DURATION, 1);
+                        const opacity = Math.min(elapsed / fadeDuration, 1);
                         target.style.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity * 0.6})`;
                     }, 30);
 
@@ -279,7 +415,7 @@
                     
                     fadeInterval = setInterval(() => {
                         const elapsed = Date.now() - fadeStart;
-                        const progress = Math.min(elapsed / FADE_DURATION, 1);
+                        const progress = Math.min(elapsed / fadeDuration, 1);
                         const r = originalBackgroundColor.r + (newColor.r - originalBackgroundColor.r) * progress;
                         const g = originalBackgroundColor.g + (newColor.g - originalBackgroundColor.g) * progress;
                         const b = originalBackgroundColor.b + (newColor.b - originalBackgroundColor.b) * progress;
@@ -293,16 +429,29 @@
         }
 
         function gameOver() {
+            if (isGameWon) return;
+            isGameOver = true;
             isLevelActive = false;
             clearInterval(fadeInterval);
             clearTimeout(delayTimeout);
             target.style.display = 'none';
-            resultTitle.textContent = '¡Has perdido!';
+            resultTitle.textContent = '¡Perdiste!';
             resultsScreen.style.display = 'flex';
-            totalTimeDisplay.textContent = `Tiempo total: ${totalTime}ms`;
+            totalTimeDisplay.textContent = '';
+            scoreDisplay.textContent = '';
+
+            resultsScreen.classList.add('fade-red-effect');
+            setTimeout(() => {
+                resultsScreen.classList.remove('fade-red-effect');
+            }, 1000);
+
+            setTimeout(() => {
+                resultsScreen.classList.add('show');
+            }, 100);
         }
 
         function endGame() {
+            isGameWon = true;
             isLevelActive = false;
             target.style.display = 'none';
             clearInterval(fadeInterval);
@@ -313,6 +462,7 @@
                 showCountdown();
             } else {
                 showResults();
+                triggerConfetti();
             }
         }
 
@@ -324,13 +474,72 @@
                 resultsList.appendChild(li);
             });
             totalTimeDisplay.textContent = `Tiempo total: ${totalTime}ms`;
+            calculateScore(totalTime);
             resultsScreen.style.display = 'flex';
+            setTimeout(() => {
+                resultsScreen.classList.add('show');
+            }, 100);
+        }
+
+        function calculateScore(totalTime) {
+            let score;
+            if (totalTime <= 10000) {
+                score = 100;
+            } else if (totalTime >= 50000) {
+                score = 1;
+            } else {
+                // Ajuste lineal entre 10,000ms y 50,000ms
+                score = Math.round(100 - ((totalTime - 10000) / 40000) * 99);
+            }
+            scoreDisplay.textContent = `Puntuación: ${score}/100`;
+        }
+
+        function triggerConfetti() {
+            const duration = 2.5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                });
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                });
+            }, 250);
         }
 
         gameContainer.addEventListener('click', (e) => {
-            if (!isLevelActive) return;
+            if (isGameWon) return;
+
+            if (isCountdownActive) {
+                return;
+            }
+
+            if (!isLevelActive) {
+                if (countdownDisplay.style.display === 'none' && !isGameOver) {
+                    gameOver();
+                }
+                return;
+            }
             
             if (e.target === target) {
+                clickSound.play(); // Reproducir sonido de clic
                 endTime = Date.now();
                 const reactionTime = endTime - startTime;
                 totalTime += reactionTime;
@@ -374,8 +583,10 @@
 
         restartButton.addEventListener('click', startGame);
         resultsRestartButton.addEventListener('click', startGame);
+        startButton.addEventListener('click', startGame);
 
-        startGame();
+        // Inicialmente mostrar la pantalla de inicio
+        startScreen.style.display = 'flex';
     </script>
 </body>
 </html>
