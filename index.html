@@ -3,603 +3,677 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Reacción Extremo</title>
+    <title>RADC Test - Con Vibraciones</title> <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
     <style>
+        /* Custom Styles (Unchanged) */
         body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
             font-family: 'Poppins', sans-serif;
+            transition: background-color 0.5s linear;
             overflow: hidden;
-            transition: background-color 0.8s ease;
         }
-        #game-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
+        #game-container { width: 100vw; height: 100vh; }
         #target {
+            transform: translate(-50%, -50%);
+            transition-property: background-color, box-shadow, border-color;
+            transition-timing-function: linear;
+            box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0);
+            border: 2px solid rgba(0, 0, 0, 0);
+            z-index: 25;
+        }
+        #timer-display {
+            transition: opacity 0.5s ease-in-out;
+        }
+        .timer-hidden { opacity: 0; pointer-events: none; }
+        .timer-visible { opacity: 1; }
+        @keyframes click-ripple { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(3); opacity: 0; } }
+        .click-effect { position: absolute; border-radius: 50%; animation: click-ripple 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; pointer-events: none; z-index: 5; }
+        #countdown { transform-origin: center center; }
+        @keyframes flash-red { 0%, 100% { background-color: transparent; } 50% { background-color: rgba(255, 59, 48, 0.3); } }
+        .flash-red-effect { position: absolute; top: 0; left: 0; right: 0; bottom: 0; animation: flash-red 0.6s ease-in-out; pointer-events: none; z-index: 100; }
+        @keyframes subtle-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); } 50% { transform: scale(1.03); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); } }
+        .pulsing-button { animation: subtle-pulse 2.5s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .screen { transition: opacity 0.5s ease-in-out, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .screen-hidden { opacity: 0; transform: scale(0.95); pointer-events: none; }
+        .screen-visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+        .text-shadow-custom { text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1); }
+        .high-contrast-text { mix-blend-mode: difference; color: white; filter: invert(1) grayscale(1) contrast(100); }
+        @keyframes expand-center-out { 0% { transform: scaleX(0); opacity: 0.5; } 100% { transform: scaleX(1); opacity: 1; } }
+        #result-pill { transform-origin: center; animation: expand-center-out 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; animation-delay: 0.3s; width: 0%; opacity: 0; }
+        .result-pill-container { overflow: hidden; }
+        #expansion-overlay {
             position: absolute;
-            width: 120px;
-            height: 120px;
-            background-color: transparent;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: opacity 10s ease-in-out;
-            display: none;
-        }
-        #timer, #level {
-            position: absolute;
-            top: 20px;
-            font-size: 24px;
-            color: #333;
-            font-weight: 500;
-        }
-        #timer {
-            left: 20px;
-            display: none;
-        }
-        #level {
-            right: 20px;
-        }
-        #countdown {
-            font-size: 72px;
-            display: none;
-            color: #333;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            animation: pulse 1s infinite;
-        }
-        #restart-button {
-            position: absolute;
-            bottom: 20px;
-            padding: 12px 24px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #fff;
-            background-color: #ff6f61;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            display: none;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            font-family: 'Poppins', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        #restart-button:hover {
-            background-color: #ff3b2f;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-        }
-        #restart-button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-        #results-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-size: 24px;
-            color: #333;
             opacity: 0;
-            transform: scale(0.8);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            z-index: 50;
+            transform-origin: center center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-radius 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #results-screen.show {
-            opacity: 1;
-            transform: scale(1);
+        @keyframes fade-in-scale-up {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
         }
-        #results-screen h2 {
-            margin-bottom: 20px;
-            font-size: 36px;
-            font-weight: 700;
-            color: #333;
+        .animate-fade-in-scale-up {
+            animation: fade-in-scale-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
         }
-        #results-screen ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+        @keyframes elegant-countdown {
+            0% { opacity: 0; transform: scale(0.9); }
+            20% { opacity: 1; transform: scale(1.05); }
+            80% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(0.95); }
         }
-        #results-screen ul li {
-            margin: 10px 0;
-            font-size: 20px;
-            color: #555;
-        }
-        #results-screen p {
-            margin: 10px 0;
-            font-size: 20px;
-            color: #555;
-        }
-        #score {
-            font-size: 28px;
-            font-weight: 700;
-            color: #ff6f61;
-            margin-top: 20px;
-        }
-        #results-restart-button {
-            padding: 12px 24px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #fff;
-            background-color: #ff6f61;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            font-family: 'Poppins', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 30px;
-        }
-        #results-restart-button:hover {
-            background-color: #ff3b2f;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-        }
-        #results-restart-button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-        @keyframes clickAnimation {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(10); opacity: 0; }
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-        @keyframes fadeRed {
-            0% { background-color: rgba(255, 0, 0, 0); }
-            50% { background-color: rgba(255, 0, 0, 0.5); }
-            100% { background-color: rgba(255, 0, 0, 0); }
-        }
-        .click-effect {
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            border-radius: 12px;
-            animation: clickAnimation 1.2s ease-out;
-        }
-        .game-over {
-            color: #dc3545;
-            font-weight: 700;
-        }
-        .blink-effect {
-            animation: blink 0.5s ease-in-out;
-        }
-        .fade-red-effect {
-            animation: fadeRed 1s ease-in-out;
-        }
-        #start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-size: 24px;
-            color: #333;
-            opacity: 1;
-            transform: scale(1);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-        #start-screen h2 {
-            margin-bottom: 20px;
-            font-size: 36px;
-            font-weight: 700;
-            color: #333;
-        }
-        #start-button {
-            width: 120px;
-            height: 120px;
-            background-color: #ff6f61;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            font-family: 'Poppins', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 30px;
-            animation: pulse 2s infinite;
-        }
-        #start-button:hover {
-            background-color: #ff3b2f;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-        }
-        #start-button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-        @keyframes zoomOut {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+        .animate-elegant-countdown {
+            animation: elegant-countdown 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
-<body>
-    <div id="game-container">
-        <div id="start-screen">
-            <h2>Test RADC</h2>
-            <div id="start-button"></div>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
+
+    <div id="game-container" class="relative w-full h-full overflow-hidden">
+        <div id="start-screen" class="screen screen-visible absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 z-30">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 text-shadow-custom">RADC Test</h1>
+            <p class="text-lg text-gray-600 mb-10 text-center">Poné a prueba tu rapidez y percepción.</p>
+            <div class="flex flex-col sm:flex-row gap-6">
+                <button id="start-button" class="pulsing-button w-36 h-36 bg-gradient-to-br from-pink-500 to-orange-400 text-white rounded-2xl shadow-lg flex flex-col items-center justify-center transition duration-300 ease-in-out hover:scale-105 hover:shadow-xl active:scale-95">
+                    <span class="text-lg font-semibold">Normal</span>
+                    <span class="text-xs font-light">(Colores)</span>
+                </button>
+                <button id="monochromatic-button" class="pulsing-button w-36 h-36 bg-gradient-to-br from-amber-200 to-amber-500 text-gray-800 rounded-2xl shadow-lg flex flex-col items-center justify-center transition duration-300 ease-in-out hover:scale-105 hover:shadow-xl active:scale-95">
+                     <span class="text-lg font-semibold">Mono</span>
+                     <span class="text-xs font-light">(Alterno)</span>
+                </button>
+            </div>
+             <p class="text-sm text-gray-500 mt-12 text-center">Diseñado para detectar cambios sutiles de color.</p>
         </div>
-        <div id="timer">Tiempo: 0ms</div>
-        <div id="level">Nivel: 1</div>
-        <div id="countdown">3</div>
-        <div id="target"></div>
-        <button id="restart-button">Reiniciar</button>
-        <div id="results-screen">
-            <h2 id="result-title"></h2>
-            <ul id="results-list"></ul>
-            <p id="total-time"></p>
-            <p id="score"></p>
-            <button id="results-restart-button">Reiniciar Juego</button>
+
+        <div id="game-ui" class="absolute inset-0 pointer-events-none z-20 hidden">
+            <div id="level-display" class="absolute top-5 right-5 md:top-8 md:right-8 text-xl md:text-2xl font-semibold high-contrast-text text-shadow-custom">Nivel: 1</div>
+            <div id="timer-display" class="absolute top-5 left-5 md:top-8 md:left-8 text-xl md:text-2xl font-semibold high-contrast-text text-shadow-custom timer-hidden">Tiempo: 0ms</div>
         </div>
+
+        <div id="countdown-container" class="absolute inset-0 flex items-center justify-center pointer-events-none z-40 hidden">
+            <div id="countdown" class="text-8xl md:text-9xl font-bold high-contrast-text text-shadow-custom">3</div>
+        </div>
+
+        <div id="target" class="absolute w-28 h-28 md:w-32 md:h-32 rounded-2xl cursor-pointer hidden" style="left: 50%; top: 50%;">
+        </div>
+
+        <div id="results-screen" class="screen screen-hidden absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 z-30">
+            <h2 id="result-title" class="text-3xl md:text-4xl font-bold text-gray-800 mb-3 text-shadow-custom">¡Excelente!</h2>
+            <div class="result-pill-container w-48 h-2 rounded-full bg-gray-200 mb-6 overflow-hidden">
+                <div id="result-pill" class="h-full"></div>
+            </div>
+            <ul id="results-list" class="text-center text-gray-600 mb-4 space-y-1"></ul>
+            <p id="total-time-display" class="text-lg font-medium text-gray-700 mb-1">Tiempo total: 0ms</p>
+            <p id="score-display" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-8">Puntuación: 100/100</p>
+            <button id="results-restart-button" class="px-8 py-3 bg-gradient-to-br from-pink-500 to-orange-400 text-white rounded-full shadow-md font-semibold uppercase tracking-wider transition duration-300 ease-in-out hover:scale-105 hover:shadow-lg active:scale-95">
+                Jugar de Nuevo
+            </button>
+             <p id="results-mode" class="text-sm text-gray-500 mt-6"></p>
+        </div>
+
+        <div id="expansion-overlay" class="hidden"></div>
     </div>
 
-    <!-- Audio para el sonido de clic -->
-    <audio id="click-sound" src="https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3"></audio>
-
     <script>
-        const target = document.getElementById('target');
-        const timerDisplay = document.getElementById('timer');
-        const levelDisplay = document.getElementById('level');
-        const countdownDisplay = document.getElementById('countdown');
-        const gameContainer = document.getElementById('game-container');
-        const restartButton = document.getElementById('restart-button');
-        const resultsScreen = document.getElementById('results-screen');
-        const resultsList = document.getElementById('results-list');
-        const totalTimeDisplay = document.getElementById('total-time');
-        const resultsRestartButton = document.getElementById('results-restart-button');
-        const resultTitle = document.getElementById('result-title');
-        const scoreDisplay = document.getElementById('score');
-        const body = document.body;
-        const clickSound = document.getElementById('click-sound');
-        const startScreen = document.getElementById('start-screen');
-        const startButton = document.getElementById('start-button');
+        // --- DOM Elements (Unchanged) ---
+        const elements = {
+            body: document.body,
+            gameContainer: document.getElementById('game-container'),
+            startScreen: document.getElementById('start-screen'),
+            startButton: document.getElementById('start-button'),
+            monochromaticButton: document.getElementById('monochromatic-button'),
+            gameUi: document.getElementById('game-ui'),
+            levelDisplay: document.getElementById('level-display'),
+            timerDisplay: document.getElementById('timer-display'),
+            countdownContainer: document.getElementById('countdown-container'),
+            countdown: document.getElementById('countdown'),
+            target: document.getElementById('target'),
+            resultsScreen: document.getElementById('results-screen'),
+            resultTitle: document.getElementById('result-title'),
+            resultPill: document.getElementById('result-pill'),
+            resultsList: document.getElementById('results-list'),
+            totalTimeDisplay: document.getElementById('total-time-display'),
+            scoreDisplay: document.getElementById('score-display'),
+            resultsRestartButton: document.getElementById('results-restart-button'),
+            resultsMode: document.getElementById('results-mode'),
+            expansionOverlay: document.getElementById('expansion-overlay')
+        };
+        for (const key in elements) { if (!elements[key]) console.error(`Error: Elemento no encontrado: ${key}`); }
 
-        let startTime, endTime, currentLevel = 1, countdown, fadeInterval, delayTimeout;
-        let currentColor = { r: 0, g: 0, b: 0 };
-        let totalTime = 0;
-        let levelTimes = [];
-        let isLevelActive = false;
-        let isGameOver = false;
-        let isGameWon = false;
-        let currentLevelType = 'normal';
-        let originalBackgroundColor = { r: 240, g: 240, b: 240 };
-        let isCountdownActive = false;
+        // --- Game Constants (Unchanged from previous version) ---
+        const CONSTANTS = {
+            TOTAL_LEVELS: 6,
+            LEVEL_DURATIONS: [ 4000, 9000, 16000, 25000, 36000, 50000 ],
+            TARGET_SIZE_PX: 128, COUNTDOWN_SECONDS: 3, MIN_DELAY: 1500, MAX_DELAY: 6000,
+            SCORE_BEST_TIME: 8000, SCORE_WORST_TIME: 40000,
+            MONO_COLORS: [ { r: 156, g: 139, b: 112 }, { r: 67,  g: 100, b: 138 } ],
+            INITIAL_BG_COLOR: { r: 243, g: 244, b: 246 },
+            TARGET_BASE_BG: 'rgba(0, 0, 0, 0)',
+            TARGET_BASE_SHADOW: 'inset 0 0 0px 0px rgba(255, 255, 255, 0)', TARGET_BASE_BORDER: 'rgba(0, 0, 0, 0)',
+            EXPANSION_DURATION_MS: 800,
+            FADE_IN_DURATION_MS: 500
+        };
 
-        const FADE_DURATION = 200000; // Duración base del fade
-        const LEVEL_6_FADE_DURATION = FADE_DURATION * 2; // Duración del fade en el nivel 6
+        // --- Game State (Unchanged) ---
+        let state = { currentLevel: 1, startTime: 0, endTime: 0, totalTime: 0, levelTimes: [], isLevelActive: false, isGameRunning: false, isTransitioning: false, isMonochromaticMode: false, currentLevelType: 'normal', currentColor: { ...CONSTANTS.INITIAL_BG_COLOR }, currentBackgroundColor: { ...CONSTANTS.INITIAL_BG_COLOR }, timeouts: { delay: null, countdown: null, expansion: null, fadeIn: null }, intervals: { fade: null }, audioSynth: null };
 
-        const levelSettings = [
-            { type: 'normal' },
-            { type: 'inverted' },
-            { type: 'normal' },
-            { type: 'inverted' },
-            { type: 'normal' },
-            { type: 'inverted' }
-        ];
+        // --- Audio Synthesis (Unchanged) ---
+        function initializeAudio() { if (!state.audioSynth) { try { state.audioSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.2 } }).toDestination(); console.log("Tone.js Synth Initialized."); } catch (error) { console.error("Error initializing Tone.js Synth:", error); } } }
+        async function startAudioContext() { if (Tone.context.state !== 'running') { try { await Tone.start(); console.log("Tone.js context started successfully."); } catch (error) { console.error("Error starting Tone.js context:", error); } } initializeAudio(); }
+        function playSound(note, duration = '16n', time = '+0.05') { if (!state.audioSynth || Tone.context.state !== 'running') { console.warn(`Cannot play sound (${note}): Audio not ready`); return; } try { state.audioSynth.triggerAttackRelease(note, duration, Tone.now() + parseFloat(time)); } catch (error) { console.error(`Tone.js error playing sound (${note}):`, error); } }
 
-        function getRandomColor(previousColor, level) {
-            let newColor;
-            const isDark = level % 2 === 1; // Alternar entre oscuro y claro
-
-            do {
-                newColor = {
-                    r: Math.floor(Math.random() * 128) + (isDark ? 0 : 128),
-                    g: Math.floor(Math.random() * 128) + (isDark ? 0 : 128),
-                    b: Math.floor(Math.random() * 128) + (isDark ? 0 : 128)
-                };
-            } while (colorDifference(previousColor, newColor) < 150);
-
-            return newColor;
-        }
-
-        function colorDifference(color1, color2) {
-            return Math.sqrt(
-                Math.pow(color1.r - color2.r, 2) +
-                Math.pow(color1.g - color2.g, 2) +
-                Math.pow(color1.b - color2.b, 2)
-            );
-        }
-
-        function startGame() {
-            startScreen.style.animation = 'zoomOut 0.5s ease-out forwards';
-            setTimeout(() => {
-                startScreen.style.display = 'none';
-                currentLevel = 1;
-                totalTime = 0;
-                levelTimes = [];
-                body.style.backgroundColor = '#f0f0f0';
-                originalBackgroundColor = { r: 240, g: 240, b: 240 };
-                restartButton.style.display = 'none';
-                resultsScreen.style.display = 'none';
-                timerDisplay.style.display = 'none';
-                clearInterval(countdown);
-                clearInterval(fadeInterval);
-                clearTimeout(delayTimeout);
-                isGameOver = false;
-                isGameWon = false;
-                showCountdown();
-            }, 500);
-        }
-
-        function showCountdown() {
-            let count = 3;
-            currentLevelType = levelSettings[currentLevel - 1].type;
-            levelDisplay.textContent = `Nivel: ${currentLevel}`;
-            
-            if (currentLevel > 1) {
-                timerDisplay.textContent = `Tiempo: ${levelTimes[currentLevel - 2]}ms`;
-                timerDisplay.style.display = 'block';
+        // --- NEW: Vibration Helper Function ---
+        /**
+         * Triggers device vibration if supported.
+         * @param {number | number[]} pattern - Duration in ms or a pattern array [vibrate, pause, vibrate, ...].
+         * NOTE: Vibration API may not work on all devices/browsers (especially iOS).
+         */
+        function triggerVibration(pattern) {
+            if ('vibrate' in navigator) {
+                try {
+                    // Check if vibration is enabled/possible (returns true/false usually)
+                    if (navigator.vibrate(pattern)) {
+                         console.log(`Vibration triggered: ${pattern}`);
+                    } else {
+                         console.log("Vibration possible but perhaps disabled by user.");
+                    }
+                } catch (e) {
+                    console.error("Vibration failed:", e);
+                }
+            } else {
+                // console.log("Vibration API not supported."); // Optional: Log if not supported
             }
-            
-            countdownDisplay.textContent = count;
-            countdownDisplay.style.display = 'block';
-            countdownDisplay.style.animation = 'fadeIn 0.5s ease-out';
-            isCountdownActive = true;
-            countdown = setInterval(() => {
+        }
+        // --- END NEW ---
+
+        // --- Utility Functions (Unchanged) ---
+        function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function getRandomColor(previousColor) { let newColor, attempts = 0; const minDifference = 100; do { newColor = { r: getRandomInt(50, 205), g: getRandomInt(50, 205), b: getRandomInt(50, 205) }; attempts++; } while (colorDifference(previousColor, newColor) < minDifference && attempts < 20); return newColor; }
+        function getMonochromaticColor(level) { return CONSTANTS.MONO_COLORS[(level - 1) % CONSTANTS.MONO_COLORS.length]; }
+        function colorDifference(color1, color2) { if (!color1 || !color2) return Infinity; return Math.sqrt(Math.pow(color1.r - color2.r, 2) + Math.pow(color1.g - color2.g, 2) + Math.pow(color1.b - color2.b, 2)); }
+        function rgbToString(color) { return `rgb(${Math.round(color.r)}, ${Math.round(color.g)}, ${Math.round(color.b)})`; }
+        function rgbaToString(color, alpha) { return `rgba(${Math.round(color.r)}, ${Math.round(color.g)}, ${Math.round(color.b)}, ${alpha})`; }
+
+        // --- UI Update Functions (Unchanged) ---
+        function updateLevelDisplay() { elements.levelDisplay.textContent = `Nivel: ${state.currentLevel}`; }
+        function updateTimerDisplay(time) { elements.timerDisplay.textContent = `Tiempo: ${time}ms`; elements.timerDisplay.classList.remove('timer-hidden'); elements.timerDisplay.classList.add('timer-visible'); }
+        function hideTimerDisplay() { elements.timerDisplay.classList.remove('timer-visible'); elements.timerDisplay.classList.add('timer-hidden'); }
+        function setBackgroundColor(color) { state.currentBackgroundColor = color; elements.body.style.backgroundColor = rgbToString(color); }
+        function showScreen(screenElement) { console.log(`Showing screen: ${screenElement.id}`); elements.startScreen.classList.remove('screen-visible'); elements.startScreen.classList.add('screen-hidden'); elements.resultsScreen.classList.remove('screen-visible'); elements.resultsScreen.classList.add('screen-hidden'); elements.gameUi.classList.add('hidden'); screenElement.classList.remove('screen-hidden'); screenElement.classList.add('screen-visible'); if (screenElement.id === 'game-ui') { elements.gameUi.classList.remove('hidden'); } }
+
+        // --- Game Logic Functions ---
+
+        // --- resetGameState (Unchanged from previous version) ---
+        function resetGameState() {
+            console.log("Resetting game state...");
+            state.currentLevel = 1; state.startTime = 0; state.endTime = 0; state.totalTime = 0; state.levelTimes = []; state.isLevelActive = false; state.isGameRunning = false; state.isTransitioning = false; state.currentLevelType = 'normal'; state.currentColor = { ...CONSTANTS.INITIAL_BG_COLOR }; state.currentBackgroundColor = { ...CONSTANTS.INITIAL_BG_COLOR };
+            clearTimersAndIntervals();
+            elements.body.style.transition = 'background-color 0.5s linear';
+            setBackgroundColor(CONSTANTS.INITIAL_BG_COLOR);
+            elements.target.style.backgroundColor = CONSTANTS.TARGET_BASE_BG;
+            elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
+            elements.target.style.borderColor = CONSTANTS.TARGET_BASE_BORDER;
+            elements.target.style.transitionDuration = '';
+            elements.target.classList.add('hidden');
+            elements.target.style.transform = 'translate(-50%, -50%) scale(1)';
+            elements.countdownContainer.classList.add('hidden');
+            elements.countdown.style.animation = '';
+            elements.countdown.classList.remove('animate-elegant-countdown');
+            elements.countdown.classList.remove('animate-fade-in-scale-up');
+            elements.countdown.style.opacity = '';
+            elements.levelDisplay.classList.remove('animate-fade-in-scale-up');
+            elements.levelDisplay.style.opacity = '';
+            hideTimerDisplay();
+            elements.resultsList.innerHTML = '';
+            elements.resultPill.style.width = '0%';
+            elements.resultPill.style.opacity = '0';
+            elements.resultPill.className = 'h-full';
+            elements.expansionOverlay.classList.add('hidden');
+            elements.expansionOverlay.style.transform = 'scale(1)';
+            elements.expansionOverlay.style.opacity = '0';
+            elements.expansionOverlay.style.backgroundColor = 'transparent';
+            elements.expansionOverlay.style.borderRadius = '0';
+            elements.startScreen.classList.remove('screen-hidden');
+            elements.startScreen.classList.add('screen-visible');
+            elements.startScreen.style.opacity = '';
+            elements.startScreen.style.transition = '';
+            elements.startScreen.style.pointerEvents = '';
+            console.log("Game state reset complete.");
+        }
+
+        // --- clearTimersAndIntervals (Unchanged from previous version) ---
+        function clearTimersAndIntervals() {
+            clearTimeout(state.timeouts.delay);
+            clearTimeout(state.timeouts.countdown);
+            clearInterval(state.intervals.fade);
+            clearTimeout(state.timeouts.expansion);
+            clearTimeout(state.timeouts.fadeIn);
+            state.timeouts.delay = null;
+            state.timeouts.countdown = null;
+            state.intervals.fade = null;
+            state.timeouts.expansion = null;
+            state.timeouts.fadeIn = null;
+        }
+
+        // --- startGame (Unchanged from previous version) ---
+        async function startGame(isMonochromatic, buttonElement) {
+            console.log(`Starting game (Monochromatic: ${isMonochromatic}) from button click...`);
+            if (state.isTransitioning || state.isGameRunning) {
+                console.warn("Attempted to start game during transition or while already running.");
+                return;
+            }
+            await startAudioContext();
+            playSound('C4', '8n', '0');
+            state.isMonochromaticMode = isMonochromatic;
+            resetGameState();
+            state.isGameRunning = true;
+            state.isTransitioning = true;
+            console.log("Game marked as running, starting transition.");
+
+            const buttonRect = buttonElement.getBoundingClientRect();
+            const overlay = elements.expansionOverlay;
+            const startColor = isMonochromatic ? 'rgb(253, 230, 138)' : 'rgb(236, 72, 153)';
+            const borderRadius = window.getComputedStyle(buttonElement).borderRadius;
+
+            overlay.style.left = `${buttonRect.left}px`;
+            overlay.style.top = `${buttonRect.top}px`;
+            overlay.style.width = `${buttonRect.width}px`;
+            overlay.style.height = `${buttonRect.height}px`;
+            overlay.style.backgroundColor = startColor;
+            overlay.style.borderRadius = borderRadius;
+            overlay.style.transform = 'scale(1)';
+            overlay.style.opacity = '1';
+            overlay.classList.remove('hidden');
+
+            elements.startScreen.style.transition = 'opacity 0.3s ease-out';
+            elements.startScreen.style.opacity = '0';
+            elements.startScreen.style.pointerEvents = 'none';
+
+            void overlay.offsetWidth;
+
+            const scaleX = window.innerWidth / buttonRect.width;
+            const scaleY = window.innerHeight / buttonRect.height;
+            const scale = Math.max(scaleX, scaleY) * 1.5;
+
+            overlay.style.transform = `scale(${scale})`;
+            overlay.style.borderRadius = '0px';
+            overlay.style.opacity = '0';
+            console.log(`Start expansion animation started: Scale=${scale.toFixed(2)}, Color=${startColor}`);
+
+            const nextAction = () => {
+                console.log("Start button expansion animation finished.");
+                overlay.classList.add('hidden');
+                overlay.style.transform = 'scale(1)';
+                overlay.style.opacity = '0';
+                overlay.style.backgroundColor = 'transparent';
+
+                elements.startScreen.classList.remove('screen-visible');
+                elements.startScreen.classList.add('screen-hidden');
+                elements.startScreen.style.opacity = '';
+                elements.startScreen.style.transition = '';
+                elements.startScreen.style.pointerEvents = '';
+
+                state.timeouts.expansion = null;
+
+                showScreen(elements.gameUi);
+                startCountdown();
+            };
+
+            clearTimeout(state.timeouts.expansion);
+            state.timeouts.expansion = setTimeout(nextAction, CONSTANTS.EXPANSION_DURATION_MS);
+        }
+
+        // --- startCountdown (Unchanged from previous version) ---
+        function startCountdown() {
+            if (!state.isGameRunning) { console.warn("Attempted to start countdown, but game is not running."); return; }
+            console.log("Starting countdown with elegant animation...");
+
+            elements.levelDisplay.classList.remove('animate-fade-in-scale-up');
+            elements.levelDisplay.style.animation = '';
+            void elements.levelDisplay.offsetWidth;
+            elements.levelDisplay.classList.add('animate-fade-in-scale-up');
+            clearTimeout(state.timeouts.fadeIn);
+            state.timeouts.fadeIn = setTimeout(() => {
+                 elements.levelDisplay.classList.remove('animate-fade-in-scale-up');
+                 state.timeouts.fadeIn = null;
+            }, CONSTANTS.FADE_IN_DURATION_MS);
+
+
+            updateLevelDisplay();
+            if (state.currentLevel > 1) { updateTimerDisplay(state.levelTimes[state.currentLevel - 2]); } else { hideTimerDisplay(); }
+
+            let count = CONSTANTS.COUNTDOWN_SECONDS;
+            elements.countdown.textContent = count;
+            elements.countdownContainer.classList.remove('hidden');
+            playSound('G4', '16n', '0');
+
+            const applyCountdownAnimation = () => {
+                const countdownElement = elements.countdown;
+                countdownElement.classList.remove('animate-elegant-countdown');
+                void countdownElement.offsetWidth;
+                countdownElement.classList.add('animate-elegant-countdown');
+                console.log(`Applied elegant countdown animation to number ${countdownElement.textContent}`);
+            };
+
+            applyCountdownAnimation();
+
+            clearTimeout(state.timeouts.countdown);
+            state.timeouts.countdown = setInterval(() => {
                 count--;
-                countdownDisplay.textContent = count;
-                if (count <= 0) {
-                    clearInterval(countdown);
-                    countdownDisplay.style.display = 'none';
-                    timerDisplay.style.display = 'none';
-                    isCountdownActive = false;
-                    startLevel();
+                console.log(`Countdown: ${count > 0 ? count : 'Start!'}`);
+                if (count > 0) {
+                    elements.countdown.textContent = count;
+                    applyCountdownAnimation();
+                    playSound(count === 2 ? 'E4' : 'C4', '16n', '0');
+                } else {
+                    clearInterval(state.timeouts.countdown);
+                    state.timeouts.countdown = null;
+                    elements.countdownContainer.classList.add('hidden');
+                    state.isTransitioning = false;
+                    console.log("Countdown finished. Preparing level.");
+                    hideTimerDisplay();
+                    prepareLevel();
                 }
             }, 1000);
         }
 
-        function startLevel() {
-            const delay = Math.random() * 7000;
-            const levelType = levelSettings[currentLevel - 1].type;
-            const fadeDuration = currentLevel === 6 ? LEVEL_6_FADE_DURATION : FADE_DURATION;
+        // --- prepareLevel (Unchanged from previous version) ---
+        function prepareLevel() {
+            if (!state.isGameRunning) { console.warn("Attempted to prepare level, but game is not running."); return; }
+            console.log(`Preparing Level ${state.currentLevel}...`);
 
-            if (levelType === 'normal') {
-                const color = getRandomColor(currentColor, currentLevel);
-                currentColor = color;
-                
-                target.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
-                target.style.top = `${Math.random() * (window.innerHeight - 120)}px`;
-                target.style.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0)`;
-                target.style.display = 'none';
+            elements.body.style.transition = 'background-color 0.5s linear';
 
-                delayTimeout = setTimeout(() => {
-                    target.style.display = 'block';
-                    const fadeStart = Date.now();
-                    
-                    fadeInterval = setInterval(() => {
-                        const elapsed = Date.now() - fadeStart;
-                        const opacity = Math.min(elapsed / fadeDuration, 1);
-                        target.style.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity * 0.6})`;
-                    }, 30);
+            state.currentLevelType = (state.currentLevel % 2 === 0) ? 'inverted' : 'normal';
+            const levelIndex = state.currentLevel - 1;
+            const fadeDuration = CONSTANTS.LEVEL_DURATIONS[levelIndex] || CONSTANTS.LEVEL_DURATIONS[CONSTANTS.LEVEL_DURATIONS.length - 1];
+            console.log(`Level ${state.currentLevel} Fade Duration: ${fadeDuration}ms`);
 
-                    startTime = Date.now();
-                    isLevelActive = true;
-                }, delay);
-            } else {
-                const newColor = getRandomColor(originalBackgroundColor, currentLevel);
-                target.style.backgroundColor = `rgb(${originalBackgroundColor.r}, ${originalBackgroundColor.g}, ${originalBackgroundColor.b})`;
-                target.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
-                target.style.top = `${Math.random() * (window.innerHeight - 120)}px`;
-                target.style.display = 'none';
+            elements.target.style.transitionDuration = `${fadeDuration / 1000}s`;
 
-                delayTimeout = setTimeout(() => {
-                    target.style.display = 'block';
-                    const fadeStart = Date.now();
-                    
-                    fadeInterval = setInterval(() => {
-                        const elapsed = Date.now() - fadeStart;
-                        const progress = Math.min(elapsed / fadeDuration, 1);
-                        const r = originalBackgroundColor.r + (newColor.r - originalBackgroundColor.r) * progress;
-                        const g = originalBackgroundColor.g + (newColor.g - originalBackgroundColor.g) * progress;
-                        const b = originalBackgroundColor.b + (newColor.b - originalBackgroundColor.b) * progress;
-                        body.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
-                    }, 30);
+            const targetColor = state.isMonochromaticMode ? getMonochromaticColor(state.currentLevel) : getRandomColor(state.currentBackgroundColor);
+            state.currentColor = targetColor;
+            console.log(`Target color for level ${state.currentLevel} (${state.isMonochromaticMode ? 'Mono' : 'Normal'}): ${rgbToString(targetColor)}`);
 
-                    startTime = Date.now();
-                    isLevelActive = true;
-                }, delay);
+            elements.target.style.backgroundColor = CONSTANTS.TARGET_BASE_BG;
+            elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
+            elements.target.style.borderColor = CONSTANTS.TARGET_BASE_BORDER;
+            elements.target.classList.add('hidden');
+
+            const targetSize = elements.target.offsetWidth || CONSTANTS.TARGET_SIZE_PX;
+            const maxX = window.innerWidth - targetSize;
+            const maxY = window.innerHeight - targetSize;
+            const targetX = getRandomInt(targetSize / 2, maxX - targetSize / 2);
+            const targetY = getRandomInt(targetSize / 2, maxY - targetSize / 2);
+            elements.target.style.left = `${targetX}px`;
+            elements.target.style.top = `${targetY}px`;
+
+            const delay = getRandomInt(CONSTANTS.MIN_DELAY, CONSTANTS.MAX_DELAY);
+            console.log(`Level ${state.currentLevel} (${state.currentLevelType}) will start in ${delay}ms.`);
+            clearTimeout(state.timeouts.delay);
+            state.timeouts.delay = setTimeout(() => {
+                if (!state.isGameRunning) { console.log("Delay finished, but game stopped."); return; }
+                console.log(`Starting Level ${state.currentLevel} fade.`);
+                state.timeouts.delay = null;
+                startLevelFade(targetColor, fadeDuration);
+            }, delay);
+        }
+
+        // --- MODIFIED: startLevelFade (Added vibration) ---
+        function startLevelFade(targetColor, fadeDuration) {
+            if (!state.isGameRunning) return;
+
+            // --- NEW: Vibrate on level start ---
+            triggerVibration(75); // Short buzz for "Go!"
+            // --- END NEW ---
+
+            elements.target.classList.remove('hidden');
+            console.log(`Target display style after removing hidden: ${window.getComputedStyle(elements.target).display}`);
+            state.startTime = Date.now();
+            state.isLevelActive = true;
+            console.log("Level is now ACTIVE.");
+            playSound('A3', '32n', '+0.01');
+
+            clearInterval(state.intervals.fade);
+            state.intervals.fade = null;
+
+            if (state.currentLevelType === 'normal') {
+                console.log("Fade Type: Normal - Target fades in using CSS transition.");
+                elements.target.style.backgroundColor = rgbaToString(targetColor, 0.9);
+                elements.target.style.boxShadow = `inset 0 0 15px 5px rgba(255, 255, 255, 0.1)`;
+                elements.target.style.borderColor = rgbaToString(targetColor, 0.5);
+            } else { // Inverted Mode
+                console.log("Fade Type: Inverted - Background fades using CSS transition.");
+                elements.target.style.backgroundColor = rgbToString(state.currentBackgroundColor);
+                elements.target.style.borderColor = rgbaToString(state.currentBackgroundColor, 0.3);
+                elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
+
+                elements.body.style.transition = `background-color ${fadeDuration / 1000}s linear`;
+                setBackgroundColor(targetColor);
             }
         }
+        // --- END MODIFIED ---
 
-        function gameOver() {
-            if (isGameWon) return;
-            isGameOver = true;
-            isLevelActive = false;
-            clearInterval(fadeInterval);
-            clearTimeout(delayTimeout);
-            target.style.display = 'none';
-            resultTitle.textContent = '¡Perdiste!';
-            resultsScreen.style.display = 'flex';
-            totalTimeDisplay.textContent = '';
-            scoreDisplay.textContent = '';
+        // --- MODIFIED: handleCorrectClick (Added vibration) ---
+        function handleCorrectClick() {
+            console.log("Correct click registered.");
+            if (state.isTransitioning) {
+                console.warn("Correct click ignored during transition.");
+                return;
+            }
+            state.endTime = Date.now();
+            const reactionTime = state.endTime - state.startTime;
+            state.totalTime += reactionTime;
+            state.levelTimes.push(reactionTime);
+            state.isLevelActive = false;
+            state.isTransitioning = true;
+            console.log("Level is now INACTIVE. Starting expansion animation.");
 
-            resultsScreen.classList.add('fade-red-effect');
-            setTimeout(() => {
-                resultsScreen.classList.remove('fade-red-effect');
-            }, 1000);
+            clearTimersAndIntervals();
+            playSound('C5', '16n', '0');
+            // --- NEW: Vibrate on correct click ---
+            triggerVibration(50); // Short, sharp buzz
+            // --- END NEW ---
 
-            setTimeout(() => {
-                resultsScreen.classList.add('show');
-            }, 100);
+            if (state.currentLevelType === 'normal') {
+                 setBackgroundColor(state.currentColor);
+            }
+
+            const targetRect = elements.target.getBoundingClientRect();
+            const overlay = elements.expansionOverlay;
+            const color = rgbToString(state.currentColor);
+
+            elements.target.classList.add('hidden');
+            elements.target.style.backgroundColor = CONSTANTS.TARGET_BASE_BG;
+            elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
+            elements.target.style.borderColor = CONSTANTS.TARGET_BASE_BORDER;
+
+            overlay.style.left = `${targetRect.left}px`;
+            overlay.style.top = `${targetRect.top}px`;
+            overlay.style.width = `${targetRect.width}px`;
+            overlay.style.height = `${targetRect.height}px`;
+            overlay.style.backgroundColor = color;
+            overlay.style.borderRadius = window.getComputedStyle(elements.target).borderRadius;
+            overlay.style.transform = 'scale(1)';
+            overlay.style.opacity = '1';
+            overlay.classList.remove('hidden');
+
+            void overlay.offsetWidth;
+
+            const scaleX = window.innerWidth / targetRect.width;
+            const scaleY = window.innerHeight / targetRect.height;
+            const scale = Math.max(scaleX, scaleY) * 1.5;
+
+            overlay.style.transform = `scale(${scale})`;
+            overlay.style.borderRadius = '0px';
+            overlay.style.opacity = '0';
+            console.log(`Level transition expansion animation started: Scale=${scale.toFixed(2)}, Color=${color}`);
+
+            const nextAction = () => {
+                console.log("Level transition expansion animation finished.");
+                overlay.classList.add('hidden');
+                overlay.style.transform = 'scale(1)';
+                overlay.style.opacity = '0';
+                overlay.style.backgroundColor = 'transparent';
+                state.timeouts.expansion = null;
+
+                if (state.currentLevel < CONSTANTS.TOTAL_LEVELS) {
+                    state.currentLevel++;
+                    console.log("Proceeding to next level countdown...");
+                    startCountdown();
+                } else {
+                    console.log("Game won! Showing results...");
+                    state.isTransitioning = false;
+                    endGame(true); // Pass true for win
+                }
+            };
+
+            clearTimeout(state.timeouts.expansion);
+            state.timeouts.expansion = setTimeout(nextAction, CONSTANTS.EXPANSION_DURATION_MS);
         }
+        // --- END MODIFIED ---
 
-        function endGame() {
-            isGameWon = true;
-            isLevelActive = false;
-            target.style.display = 'none';
-            clearInterval(fadeInterval);
-            resultTitle.textContent = 'Resultados Finales';
+        // --- handleIncorrectClick (Unchanged, vibration handled in endGame) ---
+        function handleIncorrectClick() { console.log("Incorrect click registered."); const isDuringDelay = state.isGameRunning && !state.isLevelActive && state.timeouts.countdown === null && !state.isTransitioning; const isActiveLevelClick = state.isLevelActive; if (isActiveLevelClick || isDuringDelay) { console.log(`Game Over triggered by incorrect click. Reason: ${isActiveLevelClick ? 'Active Level Miss' : 'Clicked During Delay'}`); playSound('E3', '4n', '0'); flashScreenRed(); endGame(false); } else { console.log(`Incorrect click ignored (Game Running=${state.isGameRunning}, Level Active=${state.isLevelActive}, Transitioning=${state.isTransitioning}, Countdown Active=${!!state.timeouts.countdown})`); } }
+        // --- flashScreenRed, createClickEffect (Unchanged) ---
+        function flashScreenRed() { const flashOverlay = document.createElement('div'); flashOverlay.className = 'flash-red-effect'; elements.gameContainer.appendChild(flashOverlay); setTimeout(() => { flashOverlay.remove(); }, 600); }
+        function createClickEffect(targetElement) { const rect = targetElement.getBoundingClientRect(); const effect = document.createElement('div'); effect.className = 'click-effect'; effect.style.left = `${rect.left + rect.width / 2}px`; effect.style.top = `${rect.top + rect.height / 2}px`; const effectSize = Math.max(rect.width, rect.height) * 1.2; effect.style.width = `${effectSize}px`; effect.style.height = `${effectSize}px`; const effectColor = state.currentColor; effect.style.backgroundColor = rgbaToString({ r: Math.min(255, effectColor.r + 30), g: Math.min(255, effectColor.g + 30), b: Math.min(255, effectColor.b + 30) }, 0.6); effect.style.transformOrigin = 'center'; effect.style.transform = 'translate(-50%, -50%) scale(0.8)'; elements.gameContainer.appendChild(effect); setTimeout(() => effect.remove(), 700); }
 
-            if (currentLevel < levelSettings.length) {
-                currentLevel++;
-                showCountdown();
-            } else {
-                showResults();
+        // --- MODIFIED: endGame (Added vibration) ---
+        function endGame(isWin) {
+            console.log(`Ending game. Win: ${isWin}`);
+            state.isGameRunning = false;
+            state.isLevelActive = false;
+            clearTimersAndIntervals();
+            elements.target.classList.add('hidden');
+            elements.expansionOverlay.classList.add('hidden');
+            state.isTransitioning = false;
+            elements.body.style.transition = 'background-color 0.5s linear';
+
+            if (isWin) {
+                playSound('G5', '2n', '+0.1');
+                // --- NEW: Vibrate on Win ---
+                triggerVibration([100, 50, 100]); // Double buzz for win
+                // --- END NEW ---
+                showResults(true);
                 triggerConfetti();
+            } else {
+                playSound('D3', '2n', '+0.1');
+                 // --- NEW: Vibrate on Lose/Error ---
+                triggerVibration([75, 50, 75]); // Different double buzz for lose/error
+                 // --- END NEW ---
+                showResults(false);
             }
         }
+        // --- END MODIFIED ---
 
-        function showResults() {
-            resultsList.innerHTML = '';
-            levelTimes.forEach((time, index) => {
+        // --- Show Results (Unchanged) ---
+        function showResults(isWin = true) {
+            console.log("Showing results screen...");
+            elements.resultsList.innerHTML = '';
+            state.levelTimes.forEach((time, index) => {
                 const li = document.createElement('li');
                 li.textContent = `Nivel ${index + 1}: ${time}ms`;
-                resultsList.appendChild(li);
+                elements.resultsList.appendChild(li);
             });
-            totalTimeDisplay.textContent = `Tiempo total: ${totalTime}ms`;
-            calculateScore(totalTime);
-            resultsScreen.style.display = 'flex';
-            setTimeout(() => {
-                resultsScreen.classList.add('show');
-            }, 100);
-        }
-
-        function calculateScore(totalTime) {
-            let score;
-            if (totalTime <= 10000) {
-                score = 100;
-            } else if (totalTime >= 50000) {
-                score = 1;
+            elements.totalTimeDisplay.textContent = `Tiempo total: ${state.totalTime}ms`;
+            const pillGradientClass = state.isMonochromaticMode ? 'bg-gradient-to-br from-amber-200 to-amber-500' : 'bg-gradient-to-r from-pink-500 to-orange-400';
+            elements.resultPill.className = 'h-full';
+            elements.resultPill.style.width = '0%';
+            elements.resultPill.style.opacity = '0';
+            void elements.resultPill.offsetWidth;
+            elements.resultPill.classList.add(...pillGradientClass.split(' '));
+            if (isWin) {
+                const score = calculateScore(state.totalTime);
+                elements.resultTitle.textContent = getResultMessage(score);
+                elements.scoreDisplay.textContent = `Puntuación: ${score}/100`;
+                elements.scoreDisplay.classList.remove('hidden');
+                elements.resultPill.style.width = `${score}%`;
+                elements.resultPill.style.opacity = '1';
             } else {
-                // Ajuste lineal entre 10,000ms y 50,000ms
-                score = Math.round(100 - ((totalTime - 10000) / 40000) * 99);
+                elements.resultTitle.textContent = '¡Intentalo de Nuevo!';
+                elements.scoreDisplay.classList.add('hidden');
+                elements.resultPill.style.width = '100%';
+                elements.resultPill.style.opacity = '1';
             }
-            scoreDisplay.textContent = `Puntuación: ${score}/100`;
+            elements.resultsMode.textContent = `Modo: ${state.isMonochromaticMode ? 'Monocromático (Alterno)' : 'Normal (Color)'}`;
+            showScreen(elements.resultsScreen);
+            console.log(`Result pill classes: ${elements.resultPill.className}`);
+            console.log(`Result pill target width: ${elements.resultPill.style.width}`);
         }
 
-        function triggerConfetti() {
-            const duration = 2.5 * 1000;
-            const animationEnd = Date.now() + duration;
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+        // --- Utility Functions (Calculate Score, Result Message, Confetti - Unchanged) ---
+        function calculateScore(totalTime) { if (!isFinite(totalTime) || totalTime < 0) return 0; const best = CONSTANTS.SCORE_BEST_TIME, worst = CONSTANTS.SCORE_WORST_TIME; if (totalTime <= best) return 100; if (totalTime >= worst) return 1; return Math.max(1, Math.round(100 - ((totalTime - best) / (worst - best)) * 99)); }
+        function getResultMessage(score) { if (score === 100) return "¡Perfecto!"; if (score >= 90) return "¡Increíble!"; if (score >= 75) return "¡Muy Bien!"; if (score >= 50) return "¡Buen Intento!"; return "¡Puedes Mejorar!"; }
+        function triggerConfetti() { const duration = 2 * 1000, animationEnd = Date.now() + duration; const defaults = { startVelocity: 25, spread: 360, ticks: 50, zIndex: 100 }; function randomInRange(min, max) { return Math.random() * (max - min) + min; } const interval = setInterval(function() { const timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) return clearInterval(interval); const particleCount = 40 * (timeLeft / duration); confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.4, 0.6), y: Math.random() - 0.2 } }); }, 250); }
 
-            function randomInRange(min, max) {
-                return Math.random() * (max - min) + min;
-            }
-
-            const interval = setInterval(function() {
-                const timeLeft = animationEnd - Date.now();
-
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
-
-                const particleCount = 50 * (timeLeft / duration);
-                confetti({
-                    ...defaults,
-                    particleCount,
-                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-                });
-                confetti({
-                    ...defaults,
-                    particleCount,
-                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-                });
-            }, 250);
-        }
-
-        gameContainer.addEventListener('click', (e) => {
-            if (isGameWon) return;
-
-            if (isCountdownActive) {
-                return;
-            }
-
-            if (!isLevelActive) {
-                if (countdownDisplay.style.display === 'none' && !isGameOver) {
-                    gameOver();
-                }
-                return;
-            }
-            
-            if (e.target === target) {
-                clickSound.play(); // Reproducir sonido de clic
-                endTime = Date.now();
-                const reactionTime = endTime - startTime;
-                totalTime += reactionTime;
-                levelTimes.push(reactionTime);
-
-                if (currentLevelType === 'normal') {
-                    body.style.backgroundColor = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-                    originalBackgroundColor = currentColor;
-                } else {
-                    const newColor = getRandomColor(originalBackgroundColor, currentLevel);
-                    body.style.backgroundColor = `rgb(${newColor.r}, ${newColor.g}, ${newColor.b})`;
-                    originalBackgroundColor = newColor;
-                }
-
-                target.style.display = 'none';
-                clearInterval(fadeInterval);
-                createClickEffect();
-
-                if (currentLevel < levelSettings.length) {
-                    currentLevel++;
-                    showCountdown();
-                } else {
-                    endGame();
-                }
-            } else {
-                gameOver();
-            }
+        // --- Event Listeners (Unchanged from previous version) ---
+        elements.startButton.addEventListener('click', function() {
+             console.log("Start Button (Normal) clicked.");
+             startGame(false, this);
         });
-
-        function createClickEffect() {
-            const effect = document.createElement('div');
-            effect.className = 'click-effect';
-            effect.style.backgroundColor = currentLevelType === 'normal' 
-                ? `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0.3)`
-                : `rgba(${originalBackgroundColor.r}, ${originalBackgroundColor.g}, ${originalBackgroundColor.b}, 0.3)`;
-            effect.style.left = target.style.left;
-            effect.style.top = target.style.top;
-            gameContainer.appendChild(effect);
-            setTimeout(() => effect.remove(), 1200);
+        elements.monochromaticButton.addEventListener('click', function() {
+             console.log("Start Button (Mono) clicked.");
+             startGame(true, this);
+        });
+        elements.resultsRestartButton.addEventListener('click', () => {
+            console.log("Results Restart Button clicked.");
+            playSound('A4', '8n', '0');
+            resetGameState();
+            showScreen(elements.startScreen);
+        });
+        function handleGameInteraction(event) {
+            if (event.type === 'touchstart' && state.isGameRunning) {
+                let targetElement = event.target;
+                let isButton = false;
+                while (targetElement != null) {
+                    if (targetElement.tagName === 'BUTTON') { isButton = true; break; }
+                    targetElement = targetElement.parentElement;
+                }
+                if (!isButton) { event.preventDefault(); }
+            }
+            if (!state.isGameRunning || state.isTransitioning) {
+                console.log(`Ignoring interaction: Game Running=${state.isGameRunning}, Transitioning=${state.isTransitioning}`);
+                return;
+            }
+            let isOnTarget = false;
+            const targetRect = elements.target.getBoundingClientRect();
+            const isTargetVisible = !!elements.target.offsetParent && window.getComputedStyle(elements.target).visibility !== 'hidden' && window.getComputedStyle(elements.target).display !== 'none';
+            if (isTargetVisible) {
+                let clientX, clientY;
+                if (event.type === 'mousedown') { clientX = event.clientX; clientY = event.clientY; }
+                else if (event.type === 'touchstart' && event.touches.length > 0) { clientX = event.touches[0].clientX; clientY = event.touches[0].clientY; }
+                if (clientX !== undefined && clientY !== undefined) {
+                    isOnTarget = clientX >= targetRect.left && clientX <= targetRect.right &&
+                                 clientY >= targetRect.top && clientY <= targetRect.bottom;
+                }
+            }
+            console.log(`Interaction details: isOnTarget=${isOnTarget}, isLevelActive=${state.isLevelActive}, isTargetVisible=${isTargetVisible}`);
+            if (isOnTarget && state.isLevelActive) {
+                handleCorrectClick(); // Vibration added inside this function
+            } else {
+                handleIncorrectClick(); // Vibration for loss added inside endGame(false)
+            }
         }
+        elements.gameContainer.addEventListener('mousedown', handleGameInteraction);
+        elements.gameContainer.addEventListener('touchstart', handleGameInteraction, { passive: false });
 
-        restartButton.addEventListener('click', startGame);
-        resultsRestartButton.addEventListener('click', startGame);
-        startButton.addEventListener('click', startGame);
+        // --- Initial Setup (Unchanged) ---
+        console.log("Initializing game setup...");
+        resetGameState();
+        showScreen(elements.startScreen);
+        console.log("Game setup complete. Waiting for user interaction.");
 
-        // Inicialmente mostrar la pantalla de inicio
-        startScreen.style.display = 'flex';
     </script>
+
 </body>
 </html>
+
