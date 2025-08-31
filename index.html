@@ -56,14 +56,12 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             transition: background-color 0.5s ease, color 0.5s ease;
-            /* == MODIFICACIÓN CSS: Se deshabilita la selección de texto en todo el juego == */
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
         }
 
-        /* Aunque la selección está deshabilitada, dejamos el estilo por si se habilita en algún elemento específico */
         ::selection {
             background-color: var(--color-primary-orange);
             color: white;
@@ -220,7 +218,6 @@
         body.light-mode #start-button:hover, body.light-mode #how-to-play-button:hover, body.light-mode #close-instructions-button:hover {
             color: #fff;
         }
-
 
         .btn-modern:hover::before {
             width: 300px;
@@ -421,6 +418,14 @@
             perspective: 1500px;
             transition: transform 0.3s ease;
         }
+        
+        /* === INICIO: ESTILO PARA EL EASTER EGG === */
+        .card-item.easter-egg-active {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            will-change: transform;
+            z-index: 50; /* Para que se superpongan al moverse */
+        }
+        /* === FIN: ESTILO PARA EL EASTER EGG === */
 
         .card-item:hover {
             transform: scale(1.05);
@@ -458,14 +463,9 @@
           transition: filter 0.8s ease;
         }
 
-        /* === MODIFICACIÓN CSS: INICIO === */
-        /* Se unifica el efecto de la imagen al voltearse para ambos temas. */
-        /* Ahora, tanto en modo oscuro como claro, la imagen se pondrá en escala de grises y con el mismo brillo. */
         .is-flipped .card-front img {
             filter: grayscale(1) brightness(0.8);
         }
-        /* La regla específica para 'body.light-mode .is-flipped .card-front img' fue eliminada por ser redundante. */
-        /* === MODIFICACIÓN CSS: FIN === */
         
         .card-name-overlay {
             background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
@@ -587,8 +587,34 @@
             box-shadow: 0 0 30px rgba(229, 0, 90, 0.4);
         }
 
+        /* === INICIO: MODIFICACIÓN DEL EFECTO DE "TODAS VOLTEADAS" === */
+        .effect-all-flipped {
+            animation: sophisticated-pulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes sophisticated-pulse {
+            0% { 
+                filter: brightness(1) sepia(0);
+                transform: scale(1); 
+            }
+            30% { 
+                filter: brightness(1.2) sepia(0.2); 
+                transform: scale(1.01);
+            }
+            60% { 
+                filter: brightness(1) sepia(0);
+                transform: scale(1); 
+            }
+            100% { 
+                filter: brightness(1) sepia(0);
+                transform: scale(1); 
+            }
+        }
+        /* === FIN: MODIFICACIÓN DEL EFECTO === */
+
     </style>
 </head>
+<!-- CAMBIO: Se añade la clase 'light-mode' para que el tema claro sea el predeterminado -->
 <body class="overflow-hidden light-mode">
 
     <div class="main-container w-full min-h-screen relative">
@@ -602,11 +628,11 @@
                     <button id="how-to-play-button" class="btn-modern">Cómo Jugar</button>
                 </div>
             </div>
-            <!-- MODIFICACIÓN: Se cambió "bottom-8" por "bottom-12" para subir el botón -->
             <div class="absolute bottom-12 w-full flex justify-center">
                 <button id="theme-toggle-button" class="btn-modern btn-theme" aria-label="Cambiar tema">
+                    <!-- CAMBIO: El ícono del sol está visible por defecto y la luna oculta, porque empezamos en modo claro -->
                     <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
             </div>
         </div>
@@ -688,6 +714,7 @@
         </div>
     </div>
 
+    <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-[200]"></canvas>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -726,6 +753,7 @@
             //  REFERENCIAS A ELEMENTOS DEL DOM
             // =========================================================================
             const body = document.body;
+            const mainContainer = document.querySelector('.main-container');
             const startButton = document.getElementById('start-button');
             const restartButton = document.getElementById('restart-button');
             const gameBoard = document.getElementById('game-board');
@@ -741,11 +769,19 @@
             const restartConfirmModal = document.getElementById('restart-confirm-modal');
             const cancelRestartButton = document.getElementById('cancel-restart-button');
             const confirmRestartButton = document.getElementById('confirm-restart-button');
+            const confettiCanvas = document.getElementById('confetti-canvas');
             
             // =========================================================================
             //  ESTADO DEL JUEGO
             // =========================================================================
             let yourSecretCharacter = null;
+
+            // === INICIO: VARIABLES PARA EL EASTER EGG ===
+            let isEggActive = false;
+            let lastCardClicked = null;
+            let cardClickCount = 0;
+            let lastClickTimestamp = 0; 
+            // === FIN: VARIABLES PARA EL EASTER EGG ===
             
             function switchScreen(toScreenId) {
                 const toScreen = document.getElementById(toScreenId);
@@ -780,8 +816,10 @@
             function createBoard() {
                 gameBoard.innerHTML = ''; 
 
+                // OPTIMIZACIÓN: Se añade 'data-index' para poder identificar la carta
+                // sin necesidad de buscar su posición en el DOM.
                 const cardsHTML = characters.map((character, index) => `
-                    <div class="card-item w-full aspect-[4/5] cursor-pointer group">
+                    <div class="card-item w-full aspect-[4/5] cursor-pointer group" data-index="${index}">
                         <div class="card-inner">
                             <div class="card-front">
                                 <img src="${character.imgUrl}" alt="${character.name}" class="w-full h-full object-cover rounded-md" draggable="false">
@@ -791,7 +829,6 @@
                             </div>
                             <div class="card-back">
                                 <span>QESQ</span>
-                                <!-- MODIFICACIÓN: Se eliminó el <span> que mostraba el número (index + 1) -->
                             </div>
                         </div>
                     </div>
@@ -801,37 +838,6 @@
 
                 const cards = gameBoard.querySelectorAll('.card-item');
                 cards.forEach((cardElement, index) => {
-                    const character = characters[index]; 
-                    
-                    // == MODIFICACIÓN JS: Se mueven los listeners de 'imgElement' a 'cardElement' ==
-                    // Esto asegura que la interacción de mantener presionado funcione en toda la tarjeta,
-                    // incluyendo el nombre del personaje.
-                    
-                    cardElement.addEventListener('click', () => {
-                        cardElement.classList.toggle('is-flipped');
-                    });
-                    
-                    cardElement.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        showImageModal(character.imgUrl, character.name);
-                    });
-
-                    let pressTimer;
-                    cardElement.addEventListener('touchstart', (e) => {
-                        // Solo prevenimos la acción por defecto si el temporizador se completa.
-                        pressTimer = setTimeout(() => {
-                            e.preventDefault();
-                            showImageModal(character.imgUrl, character.name);
-                        }, 500); 
-                    }, { passive: true }); // Usamos passive: true para mejorar el scroll si no es un long-press
-
-                    cardElement.addEventListener('touchend', () => {
-                        clearTimeout(pressTimer);
-                    });
-                     cardElement.addEventListener('touchmove', () => {
-                        clearTimeout(pressTimer);
-                    });
-
                     setTimeout(() => {
                         cardElement.classList.add('card-pop-in');
                     }, index * 40);
@@ -840,15 +846,12 @@
 
             function handleGameStart() {
                 yourSecretCharacter = characters[Math.floor(Math.random() * characters.length)];
-
                 switchScreen('character-reveal-screen');
-                
                 const revealedCharacterImg = document.getElementById('revealed-character-img');
                 const revealedCharacterName = document.getElementById('revealed-character-name');
                 revealedCharacterImg.src = yourSecretCharacter.imgUrl;
                 revealedCharacterImg.alt = `Tu Personaje: ${yourSecretCharacter.name}`;
                 revealedCharacterName.textContent = yourSecretCharacter.name;
-
                 setTimeout(() => {
                     showGameScreen();
                 }, 4000);
@@ -857,19 +860,172 @@
             function showGameScreen() {
                 switchScreen('game-screen');
                 body.classList.remove('overflow-hidden');
-                
                 const yourCharacterImg = document.getElementById('your-character-img');
                 const yourCharacterName = document.getElementById('your-character-name');
                 yourCharacterImg.src = yourSecretCharacter.imgUrl;
                 yourCharacterImg.alt = `Tu Personaje Secreto: ${yourSecretCharacter.name}`;
                 yourCharacterName.textContent = yourSecretCharacter.name;
-
                 createBoard();
             }
 
             function restartGame() {
                 switchScreen('start-screen');
             }
+
+            // === INICIO: NUEVA FUNCIÓN PARA EL EFECTO EASTER EGG ===
+            function triggerEasterEggEffect() {
+                if (isEggActive) return;
+                isEggActive = true;
+
+                const cards = Array.from(gameBoard.querySelectorAll('.card-item'));
+                const originalStates = cards.map(card => ({
+                    element: card,
+                    isFlipped: card.classList.contains('is-flipped')
+                }));
+
+                const goCrazy = () => {
+                    cards.forEach(card => {
+                        const randX = (Math.random() - 0.5) * 50;
+                        const randY = (Math.random() - 0.5) * 50;
+                        const randRotate = (Math.random() - 0.5) * 30;
+                        
+                        card.classList.add('easter-egg-active');
+                        card.style.transform = `translate(${randX}px, ${randY}px) rotate(${randRotate}deg)`;
+
+                        if (Math.random() > 0.6) {
+                            card.classList.toggle('is-flipped');
+                        }
+                    });
+                };
+
+                const crazyInterval = setInterval(goCrazy, 200);
+
+                setTimeout(() => {
+                    clearInterval(crazyInterval);
+
+                    originalStates.forEach(state => {
+                        const { element, isFlipped } = state;
+                        element.style.transform = '';
+                        element.classList.remove('easter-egg-active');
+                        
+                        if (isFlipped) {
+                            element.classList.add('is-flipped');
+                        } else {
+                            element.classList.remove('is-flipped');
+                        }
+                    });
+
+                    isEggActive = false;
+                }, 2500);
+            }
+            // === FIN: NUEVA FUNCIÓN PARA EL EFECTO EASTER EGG ===
+            
+            // === INICIO: MODIFICACIÓN DE LA FUNCIONALIDAD DEL CONFETI ===
+            const ctx = confettiCanvas.getContext('2d');
+            let particles = [];
+
+            function checkAllFlipped(lastFlippedCard) {
+                if (isEggActive) return;
+                const allCards = gameBoard.querySelectorAll('.card-item');
+                const flippedCards = gameBoard.querySelectorAll('.card-item.is-flipped');
+
+                if (allCards.length > 0 && flippedCards.length === allCards.length) {
+                    mainContainer.classList.remove('effect-all-flipped');
+                    void mainContainer.offsetWidth; 
+                    mainContainer.classList.add('effect-all-flipped');
+
+                    const rect = lastFlippedCard.getBoundingClientRect();
+                    createParticlesFromCard(rect);
+                }
+            }
+            
+            function createParticlesFromCard(rect) {
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+                particles = [];
+                const particleCount = 60; 
+                const confettiColors = ['#6c757d', '#adb5bd', '#ff4d00', '#e67e22', '#ff8c00', '#e5005a', '#c0392b'];
+
+                for (let i = 0; i < particleCount; i++) {
+                    const side = Math.floor(Math.random() * 4);
+                    let pos = { x: 0, y: 0 };
+                    let vel = { x: 0, y: 0 };
+
+                    switch(side) {
+                        case 0: // Top
+                            pos.x = rect.left + Math.random() * rect.width;
+                            pos.y = rect.top;
+                            vel.x = (Math.random() - 0.5) * 6;
+                            vel.y = -Math.random() * 5 - 2;
+                            break;
+                        case 1: // Right
+                            pos.x = rect.right;
+                            pos.y = rect.top + Math.random() * rect.height;
+                            vel.x = Math.random() * 5 + 2;
+                            vel.y = (Math.random() - 0.5) * 6;
+                            break;
+                        case 2: // Bottom
+                            pos.x = rect.left + Math.random() * rect.width;
+                            pos.y = rect.bottom;
+                            vel.x = (Math.random() - 0.5) * 6;
+                            vel.y = Math.random() * 5 + 2;
+                            break;
+                        case 3: // Left
+                            pos.x = rect.left;
+                            pos.y = rect.top + Math.random() * rect.height;
+                            vel.x = -Math.random() * 5 - 2;
+                            vel.y = (Math.random() - 0.5) * 6;
+                            break;
+                    }
+
+                    particles.push({
+                        x: pos.x,
+                        y: pos.y,
+                        vx: vel.x,
+                        vy: vel.y,
+                        width: Math.random() * 6 + 4,
+                        height: Math.random() * 10 + 6,
+                        color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+                        alpha: 1,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: (Math.random() - 0.5) * 0.2
+                    });
+                }
+                
+                requestAnimationFrame(animateParticles);
+            }
+            
+            function animateParticles() {
+                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.12;
+                    p.alpha -= 0.01;
+                    p.rotation += p.rotationSpeed;
+
+                    if (p.alpha <= 0) continue;
+
+                    ctx.save();
+                    ctx.globalAlpha = p.alpha;
+                    ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
+                    ctx.rotate(p.rotation);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+                    ctx.restore();
+                }
+                
+                particles = particles.filter(p => p.alpha > 0);
+                
+                if (particles.length > 0) {
+                    requestAnimationFrame(animateParticles);
+                } else {
+                    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                }
+            }
+            // === FIN: MODIFICACIÓN DE LA FUNCIONALIDAD DEL CONFETI ===
 
             // =========================================================================
             //  MANEJO DE MODALES Y LÓGICA DE DESLIZAR
@@ -899,19 +1055,14 @@
             function showImageModal(imgSrc, name) {
                 enlargedCharacterImg.src = imgSrc;
                 enlargedCharacterName.textContent = name;
-                
                 enlargedImageContainer.style.transition = 'none';
                 enlargedImageContainer.style.transform = '';
                 enlargedImageContainer.style.opacity = '';
-
                 showModal(enlargedCharacterModal);
             }
             
-            // --- Funciones para deslizar la tarjeta ---
-            
             const dragStart = (e) => {
                 if (e.target.tagName === 'P') return;
-
                 isDragging = true;
                 startX = e.pageX || e.touches[0].pageX;
                 startY = e.pageY || e.touches[0].pageY;
@@ -922,16 +1073,13 @@
 
             const dragMove = (e) => {
                 if (!isDragging) return;
-
                 const currentX = e.pageX || e.touches[0].pageX;
                 const currentY = e.pageY || e.touches[0].pageY;
                 const deltaX = currentX - startX;
                 const deltaY = currentY - startY;
-
                 if (!hasDragged && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
                    hasDragged = true;
                 }
-                
                 if (hasDragged) {
                     e.preventDefault();
                     const rotation = deltaX * 0.1;
@@ -950,12 +1098,9 @@
                     const deltaX = currentX - startX;
                     const deltaY = currentY - startY;
                     const swipeThreshold = 30; 
-
                     enlargedImageContainer.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-
                     if (Math.abs(deltaX) > swipeThreshold || Math.abs(deltaY) > swipeThreshold) {
                         let endX, endY;
-
                         if (Math.abs(deltaX) > Math.abs(deltaY)) {
                             endX = deltaX > 0 ? window.innerWidth : -window.innerWidth;
                             endY = deltaY;
@@ -963,10 +1108,8 @@
                             endY = deltaY > 0 ? window.innerHeight : -window.innerHeight;
                             endX = deltaX;
                         }
-                        
                         enlargedImageContainer.style.transform = `translate(${endX}px, ${endY}px) rotate(${deltaX * 0.2}deg)`;
                         enlargedImageContainer.style.opacity = '0';
-                        
                         setTimeout(() => hideModal(enlargedCharacterModal), 50);
                     } else {
                         enlargedImageContainer.style.transform = 'translate(0, 0) rotate(0deg)';
@@ -975,18 +1118,46 @@
             };
 
             // =========================================================================
+            //  MANEJO DEL TEMA (CLARO/OSCURO)
+            // =========================================================================
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    body.classList.remove('light-mode');
+                    moonIcon.classList.remove('hidden');
+                    sunIcon.classList.add('hidden');
+                } else {
+                    body.classList.add('light-mode');
+                    moonIcon.classList.add('hidden');
+                    sunIcon.classList.remove('hidden');
+                }
+            }
+
+            function toggleTheme() {
+                const isLight = body.classList.toggle('light-mode');
+                const newTheme = isLight ? 'light' : 'dark';
+                applyTheme(newTheme);
+                // MEJORA: Guardamos la preferencia del usuario
+                try {
+                    localStorage.setItem('qesq-theme', newTheme);
+                } catch(e) {
+                    console.error("No se pudo guardar el tema en localStorage.");
+                }
+            }
+            
+            // Al cargar la página, comprobamos si hay un tema guardado
+            const savedTheme = localStorage.getItem('qesq-theme');
+            // Si hay un tema guardado, lo aplicamos. Si no, se queda el por defecto (light).
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            }
+            
+            // =========================================================================
             //  EVENT LISTENERS
             // =========================================================================
             startButton.addEventListener('click', handleGameStart);
             
-            restartButton.addEventListener('click', () => {
-                showModal(restartConfirmModal);
-            });
-            
-            cancelRestartButton.addEventListener('click', () => {
-                hideModal(restartConfirmModal);
-            });
-            
+            restartButton.addEventListener('click', () => showModal(restartConfirmModal));
+            cancelRestartButton.addEventListener('click', () => hideModal(restartConfirmModal));
             confirmRestartButton.addEventListener('click', () => {
                 hideModal(restartConfirmModal);
                 setTimeout(restartGame, 100); 
@@ -995,11 +1166,7 @@
             howToPlayButton.addEventListener('click', () => showModal(instructionsModal));
             closeInstructionsButton.addEventListener('click', () => hideModal(instructionsModal));
             
-            themeToggleButton.addEventListener('click', () => {
-                body.classList.toggle('light-mode');
-                sunIcon.classList.toggle('hidden');
-                moonIcon.classList.toggle('hidden');
-            });
+            themeToggleButton.addEventListener('click', toggleTheme);
 
             document.getElementById('your-character').addEventListener('click', () => showImageModal(yourSecretCharacter.imgUrl, yourSecretCharacter.name));
             
@@ -1008,6 +1175,66 @@
                     hideModal(enlargedCharacterModal);
                 }
             });
+
+            // --- OPTIMIZACIÓN: DELEGACIÓN DE EVENTOS PARA EL TABLERO ---
+            let pressTimer;
+
+            gameBoard.addEventListener('click', (e) => {
+                const cardElement = e.target.closest('.card-item');
+                if (!cardElement) return;
+
+                if (isEggActive) return;
+
+                const now = Date.now();
+                const timeSinceLastClick = now - lastClickTimestamp;
+
+                if (lastCardClicked !== cardElement || timeSinceLastClick > 400) {
+                    lastCardClicked = cardElement;
+                    cardClickCount = 1;
+                } else {
+                    cardClickCount++;
+                }
+                
+                lastClickTimestamp = now;
+
+                if (cardClickCount >= 7) {
+                    triggerEasterEggEffect();
+                    cardClickCount = 0;
+                } else {
+                    cardElement.classList.toggle('is-flipped');
+                    checkAllFlipped(cardElement);
+                }
+            });
+            
+            gameBoard.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const cardElement = e.target.closest('.card-item');
+                if (!cardElement) return;
+
+                const characterIndex = cardElement.dataset.index;
+                const character = characters[characterIndex];
+                showImageModal(character.imgUrl, character.name);
+            });
+
+            gameBoard.addEventListener('touchstart', (e) => {
+                const cardElement = e.target.closest('.card-item');
+                if (!cardElement) return;
+                
+                pressTimer = setTimeout(() => {
+                    e.preventDefault();
+                    const characterIndex = cardElement.dataset.index;
+                    const character = characters[characterIndex];
+                    showImageModal(character.imgUrl, character.name);
+                }, 500); 
+            }, { passive: true });
+
+            gameBoard.addEventListener('touchend', () => {
+                clearTimeout(pressTimer);
+            });
+            gameBoard.addEventListener('touchmove', () => {
+                clearTimeout(pressTimer);
+            });
+            // --- FIN DE LA OPTIMIZACIÓN DE EVENTOS ---
 
             enlargedImageContainer.addEventListener('mousedown', dragStart);
             enlargedImageContainer.addEventListener('touchstart', dragStart, { passive: false });
