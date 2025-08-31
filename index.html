@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QESQ - Nueva Era (Fusionado)</title>
+    <title>QESQ - Nueva Era (Animación Mejorada)</title>
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -499,18 +499,37 @@
             text-shadow: none;
         }
         
-        .card-pop-in {
-            animation: card-pop-in-animation 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            opacity: 0;
-            transform: scale(0.8) rotateY(20deg);
-        }
+        /*
+        ==========================================================================
+        INICIO: MODIFICACIÓN DE LA ANIMACIÓN DE ENTRADA DE LAS TARJETAS
+        ==========================================================================
+        */
+        
+        /* Se elimina la clase y animación .card-pop-in */
 
-        @keyframes card-pop-in-animation {
+        /* Nueva animación más suave */
+        @keyframes card-entry-animation {
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(0.95);
+            }
             to {
                 opacity: 1;
-                transform: scale(1) rotateY(0);
+                transform: translateY(0) scale(1);
             }
         }
+
+        /* Nueva clase que se aplicará con JS para activar la animación */
+        .card-item.is-entering {
+            opacity: 0; /* Estado inicial para evitar parpadeos */
+            animation: card-entry-animation 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        
+        /*
+        ==========================================================================
+        FIN: MODIFICACIÓN DE LA ANIMACIÓN DE ENTRADA DE LAS TARJETAS
+        ==========================================================================
+        */
         
         /*
         ==========================================================================
@@ -614,7 +633,6 @@
 
     </style>
 </head>
-<!-- CAMBIO: Se añade la clase 'light-mode' para que el tema claro sea el predeterminado -->
 <body class="overflow-hidden light-mode">
 
     <div class="main-container w-full min-h-screen relative">
@@ -630,7 +648,6 @@
             </div>
             <div class="absolute bottom-12 w-full flex justify-center">
                 <button id="theme-toggle-button" class="btn-modern btn-theme" aria-label="Cambiar tema">
-                    <!-- CAMBIO: El ícono del sol está visible por defecto y la luna oculta, porque empezamos en modo claro -->
                     <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
@@ -775,7 +792,7 @@
             //  ESTADO DEL JUEGO
             // =========================================================================
             let yourSecretCharacter = null;
-            let shuffledCharacters = []; // --- NUEVO: Array para guardar los personajes mezclados en cada partida
+            let shuffledCharacters = [];
 
             // === INICIO: VARIABLES PARA EL EASTER EGG ===
             let isEggActive = false;
@@ -813,19 +830,20 @@
             // =========================================================================
             //  FUNCIONES PRINCIPALES DEL JUEGO
             // =========================================================================
-
-            // --- NUEVO: Función para mezclar un array (Algoritmo Fisher-Yates) ---
+            
             function shuffleArray(array) {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [array[i], array[j]] = [array[j], array[i]];
                 }
             }
-
+            
+            // =========================================================================
+            // INICIO: MODIFICACIÓN DE LA FUNCIÓN createBoard
+            // =========================================================================
             function createBoard() {
                 gameBoard.innerHTML = ''; 
 
-                // --- CAMBIO: Ahora usamos el array 'shuffledCharacters' en lugar de 'characters' ---
                 const cardsHTML = shuffledCharacters.map((character, index) => `
                     <div class="card-item w-full aspect-[4/5] cursor-pointer group" data-index="${index}">
                         <div class="card-inner">
@@ -844,18 +862,44 @@
 
                 gameBoard.innerHTML = cardsHTML;
 
+                // --- NUEVA LÓGICA PARA LA ANIMACIÓN DE ONDA EXPANSIVA ---
                 const cards = gameBoard.querySelectorAll('.card-item');
-                cards.forEach((cardElement, index) => {
-                    setTimeout(() => {
-                        cardElement.classList.add('card-pop-in');
-                    }, index * 40);
+
+                // Usamos requestAnimationFrame para asegurar que el DOM está actualizado
+                // y podemos obtener las dimensiones correctas de los elementos.
+                requestAnimationFrame(() => {
+                    const boardRect = gameBoard.getBoundingClientRect();
+                    const boardCenterX = boardRect.width / 2;
+                    const boardCenterY = boardRect.height / 2;
+
+                    // Calculamos la distancia máxima (del centro a una esquina) para normalizar los retardos.
+                    const maxDist = Math.sqrt(boardCenterX**2 + boardCenterY**2);
+
+                    cards.forEach(card => {
+                        const cardRect = card.getBoundingClientRect();
+                        // Calculamos el centro de la tarjeta relativo al tablero.
+                        const cardCenterX = cardRect.left - boardRect.left + cardRect.width / 2;
+                        const cardCenterY = cardRect.top - boardRect.top + cardRect.height / 2;
+                        
+                        // Calculamos la distancia de la tarjeta al centro del tablero.
+                        const dist = Math.sqrt((cardCenterX - boardCenterX)**2 + (cardCenterY - boardCenterY)**2);
+                        
+                        // Normalizamos la distancia (valor entre 0 y 1) y la escalamos para el retardo.
+                        // Un retardo máximo de 350ms crea un efecto rápido pero suave.
+                        const delay = (dist / maxDist) * 350; 
+
+                        card.style.animationDelay = `${delay}ms`;
+                        card.classList.add('is-entering');
+                    });
                 });
             }
+            // =========================================================================
+            // FIN: MODIFICACIÓN DE LA FUNCIÓN createBoard
+            // =========================================================================
 
             function handleGameStart() {
-                // --- NUEVO: Se crea una copia del array original y se mezcla antes de empezar ---
-                shuffledCharacters = [...characters]; // Crea una copia para no modificar el original
-                shuffleArray(shuffledCharacters);   // Mezcla la copia
+                shuffledCharacters = [...characters]; 
+                shuffleArray(shuffledCharacters);
 
                 yourSecretCharacter = characters[Math.floor(Math.random() * characters.length)];
                 switchScreen('character-reveal-screen');
@@ -884,7 +928,6 @@
                 switchScreen('start-screen');
             }
 
-            // === INICIO: NUEVA FUNCIÓN PARA EL EFECTO EASTER EGG ===
             function triggerEasterEggEffect() {
                 if (isEggActive) return;
                 isEggActive = true;
@@ -930,9 +973,7 @@
                     isEggActive = false;
                 }, 2500);
             }
-            // === FIN: NUEVA FUNCIÓN PARA EL EFECTO EASTER EGG ===
             
-            // === INICIO: MODIFICACIÓN DE LA FUNCIONALIDAD DEL CONFETI ===
             const ctx = confettiCanvas.getContext('2d');
             let particles = [];
 
@@ -1037,7 +1078,6 @@
                     ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
                 }
             }
-            // === FIN: MODIFICACIÓN DE LA FUNCIONALIDAD DEL CONFETI ===
 
             // =========================================================================
             //  MANEJO DE MODALES Y LÓGICA DE DESLIZAR
@@ -1148,7 +1188,6 @@
                 const isLight = body.classList.toggle('light-mode');
                 const newTheme = isLight ? 'light' : 'dark';
                 applyTheme(newTheme);
-                // MEJORA: Guardamos la preferencia del usuario
                 try {
                     localStorage.setItem('qesq-theme', newTheme);
                 } catch(e) {
@@ -1156,9 +1195,7 @@
                 }
             }
             
-            // Al cargar la página, comprobamos si hay un tema guardado
             const savedTheme = localStorage.getItem('qesq-theme');
-            // Si hay un tema guardado, lo aplicamos. Si no, se queda el por defecto (light).
             if (savedTheme) {
                 applyTheme(savedTheme);
             }
@@ -1188,19 +1225,16 @@
                 }
             });
 
-            // --- OPTIMIZACIÓN: DELEGACIÓN DE EVENTOS PARA EL TABLERO ---
             let pressTimer;
 
             gameBoard.addEventListener('click', (e) => {
                 const cardElement = e.target.closest('.card-item');
                 if (!cardElement) return;
 
-                if (isEggActive) return;
-
                 const now = Date.now();
                 const timeSinceLastClick = now - lastClickTimestamp;
 
-                if (lastCardClicked !== cardElement || timeSinceLastClick > 400) {
+                if (lastCardClicked !== cardElement || timeSinceLastClick > 400 || isEggActive) {
                     lastCardClicked = cardElement;
                     cardClickCount = 1;
                 } else {
@@ -1209,7 +1243,7 @@
                 
                 lastClickTimestamp = now;
 
-                if (cardClickCount >= 7) {
+                if (cardClickCount >= 7 && !isEggActive) { 
                     triggerEasterEggEffect();
                     cardClickCount = 0;
                 } else {
@@ -1224,7 +1258,6 @@
                 if (!cardElement) return;
 
                 const characterIndex = cardElement.dataset.index;
-                // --- CAMBIO: Se obtiene el personaje del array mezclado ---
                 const character = shuffledCharacters[characterIndex];
                 showImageModal(character.imgUrl, character.name);
             });
@@ -1236,7 +1269,6 @@
                 pressTimer = setTimeout(() => {
                     e.preventDefault();
                     const characterIndex = cardElement.dataset.index;
-                    // --- CAMBIO: Se obtiene el personaje del array mezclado ---
                     const character = shuffledCharacters[characterIndex];
                     showImageModal(character.imgUrl, character.name);
                 }, 500); 
@@ -1248,7 +1280,6 @@
             gameBoard.addEventListener('touchmove', () => {
                 clearTimeout(pressTimer);
             });
-            // --- FIN DE LA OPTIMIZACIÓN DE EVENTOS ---
 
             enlargedImageContainer.addEventListener('mousedown', dragStart);
             enlargedImageContainer.addEventListener('touchstart', dragStart, { passive: false });
@@ -1271,4 +1302,3 @@
     </script>
 </body>
 </html>
-
