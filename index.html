@@ -3,677 +3,909 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RADC Test - Con Vibraciones</title> <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-
+    <title>QESQ - Nueva Era (Fusionado)</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        /* Custom Styles (Unchanged) */
+        /*
+        ==========================================================================
+        CONFIGURACIÓN Y VARIABLES CSS (MODO OSCURO POR DEFECTO)
+        ==========================================================================
+        */
+        :root {
+            --color-background: #0A0A1A; /* Un azul casi negro muy profundo */
+            --color-primary-orange: #FF4D00;
+            --color-secondary-blue: #00A2FF;
+            --color-accent-red: #E5005A;
+            --color-text-light: #E0E0E0;
+            --color-text-dark: #A0A0A0;
+            --card-bg-color: rgba(22, 28, 51, 0.5); /* Azul oscuro semi-transparente */
+            --card-border-color: rgba(60, 70, 110, 0.3);
+            --blur-intensity: 12px;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --header-shadow-color: rgba(0,0,0,0.2);
+        }
+
+        /*
+        ==========================================================================
+        VARIABLES CSS PARA MODO CLARO
+        ==========================================================================
+        */
+        body.light-mode {
+            --color-background: #F0F2F5; /* Un gris muy claro y suave */
+            --color-text-light: #1A202C; /* Texto oscuro principal */
+            --color-text-dark: #5A6472; /* Texto oscuro secundario */
+            --card-bg-color: rgba(255, 255, 255, 0.6); /* Blanco semi-transparente */
+            --card-border-color: rgba(0, 0, 0, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --header-shadow-color: rgba(0,0,0,0.1);
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
-            transition: background-color 0.5s linear;
-            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text-light);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
-        #game-container { width: 100vw; height: 100vh; }
-        #target {
-            transform: translate(-50%, -50%);
-            transition-property: background-color, box-shadow, border-color;
-            transition-timing-function: linear;
-            box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0);
-            border: 2px solid rgba(0, 0, 0, 0);
-            z-index: 25;
+
+        ::selection {
+            background-color: var(--color-primary-orange);
+            color: white;
         }
-        #timer-display {
-            transition: opacity 0.5s ease-in-out;
+
+        /*
+        ==========================================================================
+        EFECTOS DE FONDO Y CONTENEDOR PRINCIPAL
+        ==========================================================================
+        */
+        .main-container::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 15% 25%, var(--color-secondary-blue), transparent 30%),
+                radial-gradient(circle at 85% 75%, var(--color-primary-orange), transparent 40%);
+            opacity: 0.1;
+            filter: blur(100px);
+            z-index: -1;
+            animation: background-lights 20s infinite alternate ease-in-out;
         }
-        .timer-hidden { opacity: 0; pointer-events: none; }
-        .timer-visible { opacity: 1; }
-        @keyframes click-ripple { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(3); opacity: 0; } }
-        .click-effect { position: absolute; border-radius: 50%; animation: click-ripple 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; pointer-events: none; z-index: 5; }
-        #countdown { transform-origin: center center; }
-        @keyframes flash-red { 0%, 100% { background-color: transparent; } 50% { background-color: rgba(255, 59, 48, 0.3); } }
-        .flash-red-effect { position: absolute; top: 0; left: 0; right: 0; bottom: 0; animation: flash-red 0.6s ease-in-out; pointer-events: none; z-index: 100; }
-        @keyframes subtle-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); } 50% { transform: scale(1.03); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); } }
-        .pulsing-button { animation: subtle-pulse 2.5s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-        .screen { transition: opacity 0.5s ease-in-out, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .screen-hidden { opacity: 0; transform: scale(0.95); pointer-events: none; }
-        .screen-visible { opacity: 1; transform: scale(1); pointer-events: auto; }
-        .text-shadow-custom { text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1); }
-        .high-contrast-text { mix-blend-mode: difference; color: white; filter: invert(1) grayscale(1) contrast(100); }
-        @keyframes expand-center-out { 0% { transform: scaleX(0); opacity: 0.5; } 100% { transform: scaleX(1); opacity: 1; } }
-        #result-pill { transform-origin: center; animation: expand-center-out 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; animation-delay: 0.3s; width: 0%; opacity: 0; }
-        .result-pill-container { overflow: hidden; }
-        #expansion-overlay {
+
+        @keyframes background-lights {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.2) translate(10px, -20px); }
+        }
+
+        /* == MODIFICACIÓN CSS: Transición de pantallas más rápida == */
+        .screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
             position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
             opacity: 0;
+            transform: translateY(20px) scale(0.97); 
             pointer-events: none;
-            z-index: 50;
-            transform-origin: center center;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                        border-radius 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Se reduce el tiempo de transición de 0.5s a 0.3s */
+            transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform, opacity; 
         }
-        @keyframes fade-in-scale-up {
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
+
+        .screen.is-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
         }
-        .animate-fade-in-scale-up {
-            animation: fade-in-scale-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        
+        .screen.hidden {
+            display: none;
+        }
+
+        /*
+        ==========================================================================
+        PANTALLA DE INICIO
+        ==========================================================================
+        */
+        #start-screen h1 {
+            font-weight: 900;
+            font-size: clamp(3rem, 15vw, 8rem);
+            letter-spacing: -0.05em;
+            background-image: linear-gradient(45deg, var(--color-primary-orange), var(--color-accent-red));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: title-glow 5s infinite alternate, float-in 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        @keyframes float-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes title-glow {
+            from { text-shadow: 0 0 10px rgba(255, 77, 0, 0.4); }
+            to { text-shadow: 0 0 25px rgba(229, 0, 90, 0.6); }
+        }
+        
+        body.light-mode #start-screen h1 {
+            animation: float-in 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            text-shadow: none;
+        }
+
+        .btn-modern {
+            position: relative;
+            padding: 0.8rem 2.5rem;
+            border: 1px solid var(--card-border-color);
+            border-radius: 50px;
+            background: var(--card-bg-color);
+            backdrop-filter: blur(var(--blur-intensity));
+            color: var(--color-text-light);
+            font-weight: 600;
+            font-size: 1.1rem;
+            overflow: hidden;
+            transition: color 0.4s, transform 0.2s, box-shadow 0.4s, background-color 0.4s;
+            transform: scale(1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             opacity: 0;
+            animation: fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        @keyframes elegant-countdown {
-            0% { opacity: 0; transform: scale(0.9); }
-            20% { opacity: 1; transform: scale(1.05); }
-            80% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0; transform: scale(0.95); }
+        
+        #start-button { animation-delay: 0.2s; }
+        #how-to-play-button { animation-delay: 0.3s; }
+        #theme-toggle-button { animation-delay: 0.4s; }
+
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .animate-elegant-countdown {
-            animation: elegant-countdown 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+        .btn-modern::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: radial-gradient(circle, var(--color-primary-orange) 0%, transparent 80%);
+            border-radius: 50%;
+            transition: width 0.6s, height 0.6s;
+            transform: translate(-50%, -50%);
             opacity: 0;
+            z-index: -1;
         }
+
+        .btn-modern:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 77, 0, 0.3);
+        }
+        
+        body.light-mode .btn-modern:hover {
+            color: #fff;
+        }
+        
+        body.light-mode #start-button:hover, body.light-mode #how-to-play-button:hover, body.light-mode #close-instructions-button:hover {
+            color: #fff;
+        }
+
+
+        .btn-modern:hover::before {
+            width: 300px;
+            height: 300px;
+            opacity: 0.6;
+        }
+        
+        .btn-theme {
+            padding: 0.8rem;
+            width: 48px;
+            height: 48px;
+        }
+
+        /*
+        ==========================================================================
+        PANTALLA DE REVELACIÓN DE PERSONAJE
+        ==========================================================================
+        */
+        #character-reveal-screen h2 {
+            font-weight: 700;
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            text-shadow: 0 0 15px rgba(0, 162, 255, 0.3);
+            color: var(--color-text-dark);
+            opacity: 0;
+            animation: fade-in-up 1s 0.2s forwards;
+        }
+
+        body.light-mode #character-reveal-screen h2 {
+            text-shadow: none;
+        }
+
+        .revealed-card-container {
+            perspective: 2000px;
+            width: clamp(250px, 50vw, 320px);
+            aspect-ratio: 4 / 5;
+        }
+
+        #revealed-character-card {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: reveal-animation 3s forwards cubic-bezier(0.22, 1, 0.36, 1);
+            opacity: 0;
+            transform: translateY(50px) rotateX(70deg) scale(0.8);
+        }
+        
+        @keyframes reveal-animation {
+            0% {
+                opacity: 0;
+                transform: translateY(50px) rotateX(70deg) scale(0.8);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(0) rotateX(0deg) scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) rotateX(0deg) scale(1);
+            }
+        }
+
+        .revealed-card-inner {
+            width: 100%; height: 100%;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px var(--shadow-color);
+            position: relative;
+        }
+
+        .revealed-card-inner img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        .revealed-card-inner::before, .revealed-card-inner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .revealed-card-inner::before {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+        
+        body.light-mode .revealed-card-inner::before {
+             border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .revealed-card-inner::after {
+            background: linear-gradient(160deg, rgba(255,255,255,0.2) 0%, transparent 30%);
+            animation: card-glint 5s infinite ease-in-out;
+        }
+
+        @keyframes card-glint {
+            0%, 100% { transform: translateX(-150%) translateY(-50%) rotate(45deg); }
+            50% { transform: translateX(150%) translateY(50%) rotate(45deg); }
+        }
+
+        #revealed-character-name {
+            font-size: 1.8rem;
+            font-weight: 600;
+            opacity: 0;
+            animation: text-fade-in 1s 1.5s forwards;
+            color: var(--color-text-light);
+        }
+        
+        @keyframes text-fade-in {
+            to { opacity: 1; }
+        }
+
+        /*
+        ==========================================================================
+        PANTALLA DE JUEGO
+        ==========================================================================
+        */
+        #game-screen {
+            justify-content: flex-start;
+        }
+        
+        .board-header {
+            width: 100%;
+            max-width: 1200px;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg-color);
+            border: 1px solid var(--card-border-color);
+            border-radius: 1rem;
+            backdrop-filter: blur(var(--blur-intensity));
+            box-shadow: 0 10px 30px var(--header-shadow-color);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: header-fade-in 0.8s 0.2s forwards;
+        }
+        
+        @keyframes header-fade-in {
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #your-character {
+            width: 4rem; height: 4rem;
+            border-radius: 50%;
+            border: 2px solid var(--color-secondary-blue);
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.5), inset 0 0 5px var(--shadow-color);
+            transition: transform 0.3s ease;
+        }
+        
+        #your-character:hover {
+            transform: scale(1.1);
+        }
+        
+        #restart-button {
+            background: var(--card-bg-color);
+            border: 1px solid var(--card-border-color);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            color: var(--color-text-light);
+        }
+
+        #restart-button:hover {
+            background: var(--color-accent-red);
+            color: white;
+            border-color: transparent;
+            transform: scale(1.1) rotate(45deg);
+            box-shadow: 0 0 20px rgba(229, 0, 90, 0.4);
+        }
+        
+        #restart-button svg {
+            transition: transform 0.3s;
+        }
+        
+        #restart-button:hover svg {
+             transform: rotate(-45deg);
+        }
+        
+        body.light-mode #restart-button:hover {
+            color: white;
+        }
+
+        #game-board {
+            width: 100%;
+            max-width: 1200px;
+            perspective: 3000px;
+        }
+
+        .card-item {
+            perspective: 1500px;
+            transition: transform 0.3s ease;
+        }
+
+        .card-item:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%; height: 100%;
+            transition: transform 0.6s ease;
+            transform-style: preserve-3d;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 20px var(--shadow-color);
+        }
+
+        .is-flipped .card-inner {
+            transform: rotateX(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid var(--card-border-color);
+        }
+        
+        .card-front {
+            background-color: var(--color-background);
+        }
+        
+        .card-front img {
+          filter: saturate(1.1);
+          transition: filter 0.8s ease;
+        }
+
+        .is-flipped .card-front img {
+            filter: saturate(0) brightness(0.5);
+        }
+        
+        body.light-mode .is-flipped .card-front img {
+            filter: grayscale(1) brightness(0.8);
+        }
+        
+        .card-name-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            text-shadow: 0 1px 3px black;
+            color: white;
+        }
+        
+        body.light-mode .card-name-overlay {
+            color: var(--color-text-light);
+            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .card-back {
+            background: var(--card-bg-color);
+            backdrop-filter: blur(var(--blur-intensity));
+            transform: rotateX(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 2rem;
+            letter-spacing: -0.05em;
+            color: rgba(255, 255, 255, 0.4);
+            text-shadow: 0 0 10px rgba(0, 162, 255, 0.2);
+            position: relative;
+        }
+        
+        body.light-mode .card-back {
+            color: rgba(0, 0, 0, 0.4);
+            text-shadow: none;
+        }
+        
+        .card-pop-in {
+            animation: card-pop-in-animation 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: scale(0.8) rotateY(20deg);
+        }
+
+        @keyframes card-pop-in-animation {
+            to {
+                opacity: 1;
+                transform: scale(1) rotateY(0);
+            }
+        }
+        
+        /*
+        ==========================================================================
+        MODALES
+        ==========================================================================
+        */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(10, 10, 26, 0.7);
+            backdrop-filter: blur(var(--blur-intensity));
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out, background-color 0.5s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        body.light-mode .modal-overlay {
+            background-color: rgba(240, 242, 245, 0.7);
+        }
+
+        .modal-overlay.is-visible {
+            opacity: 1;
+        }
+        
+        .modal-content {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.4s 0.1s ease-in-out, transform 0.4s 0.1s ease-in-out;
+            background: var(--card-bg-color);
+            border: 1px solid var(--card-border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .is-visible .modal-content {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .modal-content.enlarged-image-container {
+            background: transparent;
+            border: none;
+            padding: 0;
+            width: auto;
+            max-width: fit-content;
+            box-shadow: none;
+            overflow-y: visible;
+        }
+
+        .enlarged-image {
+            max-width: 90vw;
+            max-height: 80vh; 
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px var(--shadow-color);
+            border: 2px solid var(--card-border-color);
+        }
+        
+        #confirm-restart-button:hover::before {
+             background: radial-gradient(circle, var(--color-accent-red) 0%, transparent 80%);
+        }
+        #confirm-restart-button:hover {
+            box-shadow: 0 0 30px rgba(229, 0, 90, 0.4);
+        }
+
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
+<body class="overflow-hidden light-mode">
 
-    <div id="game-container" class="relative w-full h-full overflow-hidden">
-        <div id="start-screen" class="screen screen-visible absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 z-30">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 text-shadow-custom">RADC Test</h1>
-            <p class="text-lg text-gray-600 mb-10 text-center">Poné a prueba tu rapidez y percepción.</p>
-            <div class="flex flex-col sm:flex-row gap-6">
-                <button id="start-button" class="pulsing-button w-36 h-36 bg-gradient-to-br from-pink-500 to-orange-400 text-white rounded-2xl shadow-lg flex flex-col items-center justify-center transition duration-300 ease-in-out hover:scale-105 hover:shadow-xl active:scale-95">
-                    <span class="text-lg font-semibold">Normal</span>
-                    <span class="text-xs font-light">(Colores)</span>
-                </button>
-                <button id="monochromatic-button" class="pulsing-button w-36 h-36 bg-gradient-to-br from-amber-200 to-amber-500 text-gray-800 rounded-2xl shadow-lg flex flex-col items-center justify-center transition duration-300 ease-in-out hover:scale-105 hover:shadow-xl active:scale-95">
-                     <span class="text-lg font-semibold">Mono</span>
-                     <span class="text-xs font-light">(Alterno)</span>
+    <div class="main-container w-full min-h-screen relative">
+
+        <!-- Pantalla de Inicio -->
+        <div id="start-screen" class="screen is-active">
+            <div class="flex flex-col items-center justify-center space-y-8">
+                <h1 class="text-center">QESQ</h1>
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <button id="start-button" class="btn-modern">Iniciar Juego</button>
+                    <button id="how-to-play-button" class="btn-modern">Cómo Jugar</button>
+                </div>
+            </div>
+            <div class="absolute bottom-8 w-full flex justify-center">
+                <button id="theme-toggle-button" class="btn-modern btn-theme" aria-label="Cambiar tema">
+                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
             </div>
-             <p class="text-sm text-gray-500 mt-12 text-center">Diseñado para detectar cambios sutiles de color.</p>
         </div>
 
-        <div id="game-ui" class="absolute inset-0 pointer-events-none z-20 hidden">
-            <div id="level-display" class="absolute top-5 right-5 md:top-8 md:right-8 text-xl md:text-2xl font-semibold high-contrast-text text-shadow-custom">Nivel: 1</div>
-            <div id="timer-display" class="absolute top-5 left-5 md:top-8 md:left-8 text-xl md:text-2xl font-semibold high-contrast-text text-shadow-custom timer-hidden">Tiempo: 0ms</div>
-        </div>
-
-        <div id="countdown-container" class="absolute inset-0 flex items-center justify-center pointer-events-none z-40 hidden">
-            <div id="countdown" class="text-8xl md:text-9xl font-bold high-contrast-text text-shadow-custom">3</div>
-        </div>
-
-        <div id="target" class="absolute w-28 h-28 md:w-32 md:h-32 rounded-2xl cursor-pointer hidden" style="left: 50%; top: 50%;">
-        </div>
-
-        <div id="results-screen" class="screen screen-hidden absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 z-30">
-            <h2 id="result-title" class="text-3xl md:text-4xl font-bold text-gray-800 mb-3 text-shadow-custom">¡Excelente!</h2>
-            <div class="result-pill-container w-48 h-2 rounded-full bg-gray-200 mb-6 overflow-hidden">
-                <div id="result-pill" class="h-full"></div>
+        <!-- Pantalla de Animación del Personaje -->
+        <div id="character-reveal-screen" class="screen hidden space-y-6 text-center">
+            <h2 class="">Tu personaje es...</h2>
+            <div class="revealed-card-container">
+                <div id="revealed-character-card">
+                    <div class="revealed-card-inner">
+                        <img id="revealed-character-img" src="" alt="Tu Personaje">
+                    </div>
+                </div>
             </div>
-            <ul id="results-list" class="text-center text-gray-600 mb-4 space-y-1"></ul>
-            <p id="total-time-display" class="text-lg font-medium text-gray-700 mb-1">Tiempo total: 0ms</p>
-            <p id="score-display" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-8">Puntuación: 100/100</p>
-            <button id="results-restart-button" class="px-8 py-3 bg-gradient-to-br from-pink-500 to-orange-400 text-white rounded-full shadow-md font-semibold uppercase tracking-wider transition duration-300 ease-in-out hover:scale-105 hover:shadow-lg active:scale-95">
-                Jugar de Nuevo
-            </button>
-             <p id="results-mode" class="text-sm text-gray-500 mt-6"></p>
+            <p id="revealed-character-name" class=""></p>
         </div>
 
-        <div id="expansion-overlay" class="hidden"></div>
+        <!-- Pantalla de Juego -->
+        <div id="game-screen" class="screen hidden py-10">
+            <header class="board-header">
+                <button id="restart-button" title="Reiniciar Juego">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                      <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+                    </svg>
+                </button>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-xs" style="color: var(--color-text-dark)">Tu personaje</p>
+                        <h3 id="your-character-name" class="text-md sm:text-lg font-semibold" style="color: var(--color-text-light);"></h3>
+                    </div>
+                    <div id="your-character" class="cursor-pointer">
+                        <img id="your-character-img" src="" alt="Tu Personaje Secreto" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </header>
+            
+            <div id="game-board" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
+                <!-- Las cartas se generan dinámicamente -->
+            </div>
+        </div>
+
     </div>
 
+    <!-- Modal para agrandar la imagen -->
+    <div id="enlarged-character-modal" class="modal-overlay hidden">
+        <div class="modal-content enlarged-image-container flex flex-col items-center gap-4">
+            <img id="enlarged-character-img" src="" alt="Personaje agrandado" class="enlarged-image cursor-pointer">
+            <p id="enlarged-character-name" class="text-2xl font-bold" style="color: var(--color-text-light); text-shadow: 0 2px 4px var(--shadow-color);"></p>
+        </div>
+    </div>
+    
+    <!-- Modal para las Instrucciones -->
+    <div id="instructions-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--color-text-light);">Cómo Jugar</h2>
+            <div class="space-y-4 text-lg" style="color: var(--color-text-dark);">
+                <p>El objetivo es descubrir el personaje secreto de tu oponente antes de que él descubra el tuyo.</p>
+                <p>Por turnos, haz preguntas de "sí" o "no" sobre las características de los personajes. Usa las respuestas para descartar opciones en tu tablero haciendo clic en ellas.</p>
+                <p>Por ejemplo: "¿Tu personaje usa gorro?". Si la respuesta es "sí", descartas a todos los que no lo usan.</p>
+                <p>¡El primero en adivinar correctamente el personaje del rival, gana!</p>
+            </div>
+            <div class="flex justify-center mt-8">
+                <button id="close-instructions-button" class="btn-modern">Entendido</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="restart-confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content text-center">
+            <h2 class="text-2xl font-bold mb-4" style="color: var(--color-text-light);">¿Reiniciar el juego?</h2>
+            <p class="text-lg mb-8" style="color: var(--color-text-dark);">
+                Si continúas, volverás a la pantalla de inicio y perderás tu personaje actual.
+            </p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-restart-button" class="btn-modern">Cancelar</button>
+                <button id="confirm-restart-button" class="btn-modern">Reiniciar</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        // --- DOM Elements (Unchanged) ---
-        const elements = {
-            body: document.body,
-            gameContainer: document.getElementById('game-container'),
-            startScreen: document.getElementById('start-screen'),
-            startButton: document.getElementById('start-button'),
-            monochromaticButton: document.getElementById('monochromatic-button'),
-            gameUi: document.getElementById('game-ui'),
-            levelDisplay: document.getElementById('level-display'),
-            timerDisplay: document.getElementById('timer-display'),
-            countdownContainer: document.getElementById('countdown-container'),
-            countdown: document.getElementById('countdown'),
-            target: document.getElementById('target'),
-            resultsScreen: document.getElementById('results-screen'),
-            resultTitle: document.getElementById('result-title'),
-            resultPill: document.getElementById('result-pill'),
-            resultsList: document.getElementById('results-list'),
-            totalTimeDisplay: document.getElementById('total-time-display'),
-            scoreDisplay: document.getElementById('score-display'),
-            resultsRestartButton: document.getElementById('results-restart-button'),
-            resultsMode: document.getElementById('results-mode'),
-            expansionOverlay: document.getElementById('expansion-overlay')
-        };
-        for (const key in elements) { if (!elements[key]) console.error(`Error: Elemento no encontrado: ${key}`); }
+        document.addEventListener('DOMContentLoaded', () => {
 
-        // --- Game Constants (Unchanged from previous version) ---
-        const CONSTANTS = {
-            TOTAL_LEVELS: 6,
-            LEVEL_DURATIONS: [ 4000, 9000, 16000, 25000, 36000, 50000 ],
-            TARGET_SIZE_PX: 128, COUNTDOWN_SECONDS: 3, MIN_DELAY: 1500, MAX_DELAY: 6000,
-            SCORE_BEST_TIME: 8000, SCORE_WORST_TIME: 40000,
-            MONO_COLORS: [ { r: 156, g: 139, b: 112 }, { r: 67,  g: 100, b: 138 } ],
-            INITIAL_BG_COLOR: { r: 243, g: 244, b: 246 },
-            TARGET_BASE_BG: 'rgba(0, 0, 0, 0)',
-            TARGET_BASE_SHADOW: 'inset 0 0 0px 0px rgba(255, 255, 255, 0)', TARGET_BASE_BORDER: 'rgba(0, 0, 0, 0)',
-            EXPANSION_DURATION_MS: 800,
-            FADE_IN_DURATION_MS: 500
-        };
+            // =========================================================================
+            //  BASE DE DATOS DE PERSONAJES
+            // =========================================================================
+            const characters = [
+                { name: "Renata", imgUrl: "https://i.imgur.com/f8gRf26.png" },
+                { name: "Hugo", imgUrl: "https://i.imgur.com/o61ttUd.png" },
+                { name: "Florencio", imgUrl: "https://i.imgur.com/kToYUyO.png" },
+                { name: "Mirtha", imgUrl: "https://i.imgur.com/Yx9HpwM.png" },
+                { name: "Bautista", imgUrl: "https://i.imgur.com/rhlMOpw.png" },
+                { name: "Valentina", imgUrl: "https://i.imgur.com/Ery2KqM.png" },
+                { name: "Tiago", imgUrl: "https://i.imgur.com/B93Z0Wx.png" },
+                { name: "Rosina", imgUrl: "https://i.imgur.com/Kcmi5SA.png" },
+                { name: "Claudio", imgUrl: "https://i.imgur.com/xN8yCVY.png" },
+                { name: "Julia", imgUrl: "https://i.imgur.com/nu7Q0rE.png" },
+                { name: "Fernanda", imgUrl: "https://i.imgur.com/sx46oPW.png" },
+                { name: "Francisco", imgUrl: "https://i.imgur.com/8v7nbch.png" },
+                { name: "Alex", imgUrl: "https://i.imgur.com/cPHEruJ.png" },
+                { name: "Micaela", imgUrl: "https://i.imgur.com/pGtnB0X.png" },
+                { name: "Pedro", imgUrl: "https://i.imgur.com/hqJ9KIF.png" },
+                { name: "Martín", imgUrl: "https://i.imgur.com/2jsnfpG.png" },
+                { name: "Rosa", imgUrl: "https://i.imgur.com/KyHmOrb.png" },
+                { name: "Raul", imgUrl: "https://i.imgur.com/kLbw0sC.png" },
+                { name: "Sofía", imgUrl: "https://i.imgur.com/hpEd1N8.png" },
+                { name: "Macarena", imgUrl: "https://i.imgur.com/AztpmjA.png" },
+                { name: "Fabián", imgUrl: "https://i.imgur.com/HhFyDrw.png" },
+                { name: "Catalina", imgUrl: "https://i.imgur.com/5pYKrOr.png" },
+                { name: "Juan", imgUrl: "https://i.imgur.com/7Ila1Gq.png" },
+                { name: "Sol", imgUrl: "https://i.imgur.com/2XQJQ8k.jpeg" }
+            ];
 
-        // --- Game State (Unchanged) ---
-        let state = { currentLevel: 1, startTime: 0, endTime: 0, totalTime: 0, levelTimes: [], isLevelActive: false, isGameRunning: false, isTransitioning: false, isMonochromaticMode: false, currentLevelType: 'normal', currentColor: { ...CONSTANTS.INITIAL_BG_COLOR }, currentBackgroundColor: { ...CONSTANTS.INITIAL_BG_COLOR }, timeouts: { delay: null, countdown: null, expansion: null, fadeIn: null }, intervals: { fade: null }, audioSynth: null };
+            // =========================================================================
+            //  REFERENCIAS A ELEMENTOS DEL DOM
+            // =========================================================================
+            const body = document.body;
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+            const gameBoard = document.getElementById('game-board');
+            const enlargedCharacterModal = document.getElementById('enlarged-character-modal');
+            const enlargedCharacterImg = document.getElementById('enlarged-character-img');
+            const enlargedCharacterName = document.getElementById('enlarged-character-name'); 
+            const howToPlayButton = document.getElementById('how-to-play-button');
+            const instructionsModal = document.getElementById('instructions-modal');
+            const closeInstructionsButton = document.getElementById('close-instructions-button');
+            const themeToggleButton = document.getElementById('theme-toggle-button');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            const restartConfirmModal = document.getElementById('restart-confirm-modal');
+            const cancelRestartButton = document.getElementById('cancel-restart-button');
+            const confirmRestartButton = document.getElementById('confirm-restart-button');
+            
+            // =========================================================================
+            //  ESTADO DEL JUEGO
+            // =========================================================================
+            let yourSecretCharacter = null;
+            
+            // == MODIFICACIÓN JS: Se reduce el tiempo de espera para que coincida con el CSS ==
+            function switchScreen(toScreenId) {
+                const toScreen = document.getElementById(toScreenId);
+                const fromScreen = document.querySelector('.screen.is-active');
 
-        // --- Audio Synthesis (Unchanged) ---
-        function initializeAudio() { if (!state.audioSynth) { try { state.audioSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.05, release: 0.2 } }).toDestination(); console.log("Tone.js Synth Initialized."); } catch (error) { console.error("Error initializing Tone.js Synth:", error); } } }
-        async function startAudioContext() { if (Tone.context.state !== 'running') { try { await Tone.start(); console.log("Tone.js context started successfully."); } catch (error) { console.error("Error starting Tone.js context:", error); } } initializeAudio(); }
-        function playSound(note, duration = '16n', time = '+0.05') { if (!state.audioSynth || Tone.context.state !== 'running') { console.warn(`Cannot play sound (${note}): Audio not ready`); return; } try { state.audioSynth.triggerAttackRelease(note, duration, Tone.now() + parseFloat(time)); } catch (error) { console.error(`Tone.js error playing sound (${note}):`, error); } }
+                body.classList.add('overflow-hidden');
 
-        // --- NEW: Vibration Helper Function ---
-        /**
-         * Triggers device vibration if supported.
-         * @param {number | number[]} pattern - Duration in ms or a pattern array [vibrate, pause, vibrate, ...].
-         * NOTE: Vibration API may not work on all devices/browsers (especially iOS).
-         */
-        function triggerVibration(pattern) {
-            if ('vibrate' in navigator) {
-                try {
-                    // Check if vibration is enabled/possible (returns true/false usually)
-                    if (navigator.vibrate(pattern)) {
-                         console.log(`Vibration triggered: ${pattern}`);
-                    } else {
-                         console.log("Vibration possible but perhaps disabled by user.");
-                    }
-                } catch (e) {
-                    console.error("Vibration failed:", e);
+                if (fromScreen && fromScreen !== toScreen) {
+                    fromScreen.classList.remove('is-active');
+
+                    // Se reduce el tiempo de 500ms a 300ms para una transición aún más rápida
+                    setTimeout(() => {
+                        fromScreen.classList.add('hidden');
+                        
+                        toScreen.classList.remove('hidden');
+                        
+                        requestAnimationFrame(() => {
+                            toScreen.classList.add('is-active');
+                        });
+
+                    }, 300); // IMPORTANTE: Este tiempo debe coincidir con la duración de la transición en CSS
+                } else if (!fromScreen) {
+                    toScreen.classList.remove('hidden');
+                    toScreen.classList.add('is-active');
                 }
-            } else {
-                // console.log("Vibration API not supported."); // Optional: Log if not supported
-            }
-        }
-        // --- END NEW ---
-
-        // --- Utility Functions (Unchanged) ---
-        function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-        function getRandomColor(previousColor) { let newColor, attempts = 0; const minDifference = 100; do { newColor = { r: getRandomInt(50, 205), g: getRandomInt(50, 205), b: getRandomInt(50, 205) }; attempts++; } while (colorDifference(previousColor, newColor) < minDifference && attempts < 20); return newColor; }
-        function getMonochromaticColor(level) { return CONSTANTS.MONO_COLORS[(level - 1) % CONSTANTS.MONO_COLORS.length]; }
-        function colorDifference(color1, color2) { if (!color1 || !color2) return Infinity; return Math.sqrt(Math.pow(color1.r - color2.r, 2) + Math.pow(color1.g - color2.g, 2) + Math.pow(color1.b - color2.b, 2)); }
-        function rgbToString(color) { return `rgb(${Math.round(color.r)}, ${Math.round(color.g)}, ${Math.round(color.b)})`; }
-        function rgbaToString(color, alpha) { return `rgba(${Math.round(color.r)}, ${Math.round(color.g)}, ${Math.round(color.b)}, ${alpha})`; }
-
-        // --- UI Update Functions (Unchanged) ---
-        function updateLevelDisplay() { elements.levelDisplay.textContent = `Nivel: ${state.currentLevel}`; }
-        function updateTimerDisplay(time) { elements.timerDisplay.textContent = `Tiempo: ${time}ms`; elements.timerDisplay.classList.remove('timer-hidden'); elements.timerDisplay.classList.add('timer-visible'); }
-        function hideTimerDisplay() { elements.timerDisplay.classList.remove('timer-visible'); elements.timerDisplay.classList.add('timer-hidden'); }
-        function setBackgroundColor(color) { state.currentBackgroundColor = color; elements.body.style.backgroundColor = rgbToString(color); }
-        function showScreen(screenElement) { console.log(`Showing screen: ${screenElement.id}`); elements.startScreen.classList.remove('screen-visible'); elements.startScreen.classList.add('screen-hidden'); elements.resultsScreen.classList.remove('screen-visible'); elements.resultsScreen.classList.add('screen-hidden'); elements.gameUi.classList.add('hidden'); screenElement.classList.remove('screen-hidden'); screenElement.classList.add('screen-visible'); if (screenElement.id === 'game-ui') { elements.gameUi.classList.remove('hidden'); } }
-
-        // --- Game Logic Functions ---
-
-        // --- resetGameState (Unchanged from previous version) ---
-        function resetGameState() {
-            console.log("Resetting game state...");
-            state.currentLevel = 1; state.startTime = 0; state.endTime = 0; state.totalTime = 0; state.levelTimes = []; state.isLevelActive = false; state.isGameRunning = false; state.isTransitioning = false; state.currentLevelType = 'normal'; state.currentColor = { ...CONSTANTS.INITIAL_BG_COLOR }; state.currentBackgroundColor = { ...CONSTANTS.INITIAL_BG_COLOR };
-            clearTimersAndIntervals();
-            elements.body.style.transition = 'background-color 0.5s linear';
-            setBackgroundColor(CONSTANTS.INITIAL_BG_COLOR);
-            elements.target.style.backgroundColor = CONSTANTS.TARGET_BASE_BG;
-            elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
-            elements.target.style.borderColor = CONSTANTS.TARGET_BASE_BORDER;
-            elements.target.style.transitionDuration = '';
-            elements.target.classList.add('hidden');
-            elements.target.style.transform = 'translate(-50%, -50%) scale(1)';
-            elements.countdownContainer.classList.add('hidden');
-            elements.countdown.style.animation = '';
-            elements.countdown.classList.remove('animate-elegant-countdown');
-            elements.countdown.classList.remove('animate-fade-in-scale-up');
-            elements.countdown.style.opacity = '';
-            elements.levelDisplay.classList.remove('animate-fade-in-scale-up');
-            elements.levelDisplay.style.opacity = '';
-            hideTimerDisplay();
-            elements.resultsList.innerHTML = '';
-            elements.resultPill.style.width = '0%';
-            elements.resultPill.style.opacity = '0';
-            elements.resultPill.className = 'h-full';
-            elements.expansionOverlay.classList.add('hidden');
-            elements.expansionOverlay.style.transform = 'scale(1)';
-            elements.expansionOverlay.style.opacity = '0';
-            elements.expansionOverlay.style.backgroundColor = 'transparent';
-            elements.expansionOverlay.style.borderRadius = '0';
-            elements.startScreen.classList.remove('screen-hidden');
-            elements.startScreen.classList.add('screen-visible');
-            elements.startScreen.style.opacity = '';
-            elements.startScreen.style.transition = '';
-            elements.startScreen.style.pointerEvents = '';
-            console.log("Game state reset complete.");
-        }
-
-        // --- clearTimersAndIntervals (Unchanged from previous version) ---
-        function clearTimersAndIntervals() {
-            clearTimeout(state.timeouts.delay);
-            clearTimeout(state.timeouts.countdown);
-            clearInterval(state.intervals.fade);
-            clearTimeout(state.timeouts.expansion);
-            clearTimeout(state.timeouts.fadeIn);
-            state.timeouts.delay = null;
-            state.timeouts.countdown = null;
-            state.intervals.fade = null;
-            state.timeouts.expansion = null;
-            state.timeouts.fadeIn = null;
-        }
-
-        // --- startGame (Unchanged from previous version) ---
-        async function startGame(isMonochromatic, buttonElement) {
-            console.log(`Starting game (Monochromatic: ${isMonochromatic}) from button click...`);
-            if (state.isTransitioning || state.isGameRunning) {
-                console.warn("Attempted to start game during transition or while already running.");
-                return;
-            }
-            await startAudioContext();
-            playSound('C4', '8n', '0');
-            state.isMonochromaticMode = isMonochromatic;
-            resetGameState();
-            state.isGameRunning = true;
-            state.isTransitioning = true;
-            console.log("Game marked as running, starting transition.");
-
-            const buttonRect = buttonElement.getBoundingClientRect();
-            const overlay = elements.expansionOverlay;
-            const startColor = isMonochromatic ? 'rgb(253, 230, 138)' : 'rgb(236, 72, 153)';
-            const borderRadius = window.getComputedStyle(buttonElement).borderRadius;
-
-            overlay.style.left = `${buttonRect.left}px`;
-            overlay.style.top = `${buttonRect.top}px`;
-            overlay.style.width = `${buttonRect.width}px`;
-            overlay.style.height = `${buttonRect.height}px`;
-            overlay.style.backgroundColor = startColor;
-            overlay.style.borderRadius = borderRadius;
-            overlay.style.transform = 'scale(1)';
-            overlay.style.opacity = '1';
-            overlay.classList.remove('hidden');
-
-            elements.startScreen.style.transition = 'opacity 0.3s ease-out';
-            elements.startScreen.style.opacity = '0';
-            elements.startScreen.style.pointerEvents = 'none';
-
-            void overlay.offsetWidth;
-
-            const scaleX = window.innerWidth / buttonRect.width;
-            const scaleY = window.innerHeight / buttonRect.height;
-            const scale = Math.max(scaleX, scaleY) * 1.5;
-
-            overlay.style.transform = `scale(${scale})`;
-            overlay.style.borderRadius = '0px';
-            overlay.style.opacity = '0';
-            console.log(`Start expansion animation started: Scale=${scale.toFixed(2)}, Color=${startColor}`);
-
-            const nextAction = () => {
-                console.log("Start button expansion animation finished.");
-                overlay.classList.add('hidden');
-                overlay.style.transform = 'scale(1)';
-                overlay.style.opacity = '0';
-                overlay.style.backgroundColor = 'transparent';
-
-                elements.startScreen.classList.remove('screen-visible');
-                elements.startScreen.classList.add('screen-hidden');
-                elements.startScreen.style.opacity = '';
-                elements.startScreen.style.transition = '';
-                elements.startScreen.style.pointerEvents = '';
-
-                state.timeouts.expansion = null;
-
-                showScreen(elements.gameUi);
-                startCountdown();
-            };
-
-            clearTimeout(state.timeouts.expansion);
-            state.timeouts.expansion = setTimeout(nextAction, CONSTANTS.EXPANSION_DURATION_MS);
-        }
-
-        // --- startCountdown (Unchanged from previous version) ---
-        function startCountdown() {
-            if (!state.isGameRunning) { console.warn("Attempted to start countdown, but game is not running."); return; }
-            console.log("Starting countdown with elegant animation...");
-
-            elements.levelDisplay.classList.remove('animate-fade-in-scale-up');
-            elements.levelDisplay.style.animation = '';
-            void elements.levelDisplay.offsetWidth;
-            elements.levelDisplay.classList.add('animate-fade-in-scale-up');
-            clearTimeout(state.timeouts.fadeIn);
-            state.timeouts.fadeIn = setTimeout(() => {
-                 elements.levelDisplay.classList.remove('animate-fade-in-scale-up');
-                 state.timeouts.fadeIn = null;
-            }, CONSTANTS.FADE_IN_DURATION_MS);
-
-
-            updateLevelDisplay();
-            if (state.currentLevel > 1) { updateTimerDisplay(state.levelTimes[state.currentLevel - 2]); } else { hideTimerDisplay(); }
-
-            let count = CONSTANTS.COUNTDOWN_SECONDS;
-            elements.countdown.textContent = count;
-            elements.countdownContainer.classList.remove('hidden');
-            playSound('G4', '16n', '0');
-
-            const applyCountdownAnimation = () => {
-                const countdownElement = elements.countdown;
-                countdownElement.classList.remove('animate-elegant-countdown');
-                void countdownElement.offsetWidth;
-                countdownElement.classList.add('animate-elegant-countdown');
-                console.log(`Applied elegant countdown animation to number ${countdownElement.textContent}`);
-            };
-
-            applyCountdownAnimation();
-
-            clearTimeout(state.timeouts.countdown);
-            state.timeouts.countdown = setInterval(() => {
-                count--;
-                console.log(`Countdown: ${count > 0 ? count : 'Start!'}`);
-                if (count > 0) {
-                    elements.countdown.textContent = count;
-                    applyCountdownAnimation();
-                    playSound(count === 2 ? 'E4' : 'C4', '16n', '0');
-                } else {
-                    clearInterval(state.timeouts.countdown);
-                    state.timeouts.countdown = null;
-                    elements.countdownContainer.classList.add('hidden');
-                    state.isTransitioning = false;
-                    console.log("Countdown finished. Preparing level.");
-                    hideTimerDisplay();
-                    prepareLevel();
-                }
-            }, 1000);
-        }
-
-        // --- prepareLevel (Unchanged from previous version) ---
-        function prepareLevel() {
-            if (!state.isGameRunning) { console.warn("Attempted to prepare level, but game is not running."); return; }
-            console.log(`Preparing Level ${state.currentLevel}...`);
-
-            elements.body.style.transition = 'background-color 0.5s linear';
-
-            state.currentLevelType = (state.currentLevel % 2 === 0) ? 'inverted' : 'normal';
-            const levelIndex = state.currentLevel - 1;
-            const fadeDuration = CONSTANTS.LEVEL_DURATIONS[levelIndex] || CONSTANTS.LEVEL_DURATIONS[CONSTANTS.LEVEL_DURATIONS.length - 1];
-            console.log(`Level ${state.currentLevel} Fade Duration: ${fadeDuration}ms`);
-
-            elements.target.style.transitionDuration = `${fadeDuration / 1000}s`;
-
-            const targetColor = state.isMonochromaticMode ? getMonochromaticColor(state.currentLevel) : getRandomColor(state.currentBackgroundColor);
-            state.currentColor = targetColor;
-            console.log(`Target color for level ${state.currentLevel} (${state.isMonochromaticMode ? 'Mono' : 'Normal'}): ${rgbToString(targetColor)}`);
-
-            elements.target.style.backgroundColor = CONSTANTS.TARGET_BASE_BG;
-            elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
-            elements.target.style.borderColor = CONSTANTS.TARGET_BASE_BORDER;
-            elements.target.classList.add('hidden');
-
-            const targetSize = elements.target.offsetWidth || CONSTANTS.TARGET_SIZE_PX;
-            const maxX = window.innerWidth - targetSize;
-            const maxY = window.innerHeight - targetSize;
-            const targetX = getRandomInt(targetSize / 2, maxX - targetSize / 2);
-            const targetY = getRandomInt(targetSize / 2, maxY - targetSize / 2);
-            elements.target.style.left = `${targetX}px`;
-            elements.target.style.top = `${targetY}px`;
-
-            const delay = getRandomInt(CONSTANTS.MIN_DELAY, CONSTANTS.MAX_DELAY);
-            console.log(`Level ${state.currentLevel} (${state.currentLevelType}) will start in ${delay}ms.`);
-            clearTimeout(state.timeouts.delay);
-            state.timeouts.delay = setTimeout(() => {
-                if (!state.isGameRunning) { console.log("Delay finished, but game stopped."); return; }
-                console.log(`Starting Level ${state.currentLevel} fade.`);
-                state.timeouts.delay = null;
-                startLevelFade(targetColor, fadeDuration);
-            }, delay);
-        }
-
-        // --- MODIFIED: startLevelFade (Added vibration) ---
-        function startLevelFade(targetColor, fadeDuration) {
-            if (!state.isGameRunning) return;
-
-            // --- NEW: Vibrate on level start ---
-            triggerVibration(75); // Short buzz for "Go!"
-            // --- END NEW ---
-
-            elements.target.classList.remove('hidden');
-            console.log(`Target display style after removing hidden: ${window.getComputedStyle(elements.target).display}`);
-            state.startTime = Date.now();
-            state.isLevelActive = true;
-            console.log("Level is now ACTIVE.");
-            playSound('A3', '32n', '+0.01');
-
-            clearInterval(state.intervals.fade);
-            state.intervals.fade = null;
-
-            if (state.currentLevelType === 'normal') {
-                console.log("Fade Type: Normal - Target fades in using CSS transition.");
-                elements.target.style.backgroundColor = rgbaToString(targetColor, 0.9);
-                elements.target.style.boxShadow = `inset 0 0 15px 5px rgba(255, 255, 255, 0.1)`;
-                elements.target.style.borderColor = rgbaToString(targetColor, 0.5);
-            } else { // Inverted Mode
-                console.log("Fade Type: Inverted - Background fades using CSS transition.");
-                elements.target.style.backgroundColor = rgbToString(state.currentBackgroundColor);
-                elements.target.style.borderColor = rgbaToString(state.currentBackgroundColor, 0.3);
-                elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
-
-                elements.body.style.transition = `background-color ${fadeDuration / 1000}s linear`;
-                setBackgroundColor(targetColor);
-            }
-        }
-        // --- END MODIFIED ---
-
-        // --- MODIFIED: handleCorrectClick (Added vibration) ---
-        function handleCorrectClick() {
-            console.log("Correct click registered.");
-            if (state.isTransitioning) {
-                console.warn("Correct click ignored during transition.");
-                return;
-            }
-            state.endTime = Date.now();
-            const reactionTime = state.endTime - state.startTime;
-            state.totalTime += reactionTime;
-            state.levelTimes.push(reactionTime);
-            state.isLevelActive = false;
-            state.isTransitioning = true;
-            console.log("Level is now INACTIVE. Starting expansion animation.");
-
-            clearTimersAndIntervals();
-            playSound('C5', '16n', '0');
-            // --- NEW: Vibrate on correct click ---
-            triggerVibration(50); // Short, sharp buzz
-            // --- END NEW ---
-
-            if (state.currentLevelType === 'normal') {
-                 setBackgroundColor(state.currentColor);
             }
 
-            const targetRect = elements.target.getBoundingClientRect();
-            const overlay = elements.expansionOverlay;
-            const color = rgbToString(state.currentColor);
 
-            elements.target.classList.add('hidden');
-            elements.target.style.backgroundColor = CONSTANTS.TARGET_BASE_BG;
-            elements.target.style.boxShadow = CONSTANTS.TARGET_BASE_SHADOW;
-            elements.target.style.borderColor = CONSTANTS.TARGET_BASE_BORDER;
+            // =========================================================================
+            //  FUNCIONES PRINCIPALES DEL JUEGO
+            // =========================================================================
 
-            overlay.style.left = `${targetRect.left}px`;
-            overlay.style.top = `${targetRect.top}px`;
-            overlay.style.width = `${targetRect.width}px`;
-            overlay.style.height = `${targetRect.height}px`;
-            overlay.style.backgroundColor = color;
-            overlay.style.borderRadius = window.getComputedStyle(elements.target).borderRadius;
-            overlay.style.transform = 'scale(1)';
-            overlay.style.opacity = '1';
-            overlay.classList.remove('hidden');
+            function createBoard() {
+                gameBoard.innerHTML = ''; 
 
-            void overlay.offsetWidth;
+                const cardsHTML = characters.map((character, index) => `
+                    <div class="card-item w-full aspect-[4/5] cursor-pointer group">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <img src="${character.imgUrl}" alt="${character.name}" class="w-full h-full object-cover rounded-md" draggable="false">
+                                <div class="card-name-overlay absolute bottom-0 left-0 right-0 p-2 text-center">
+                                    <p class="font-semibold text-sm truncate">${character.name}</p>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <span>QESQ</span>
+                                <span class="absolute bottom-2 text-sm font-normal opacity-70">${index + 1}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
 
-            const scaleX = window.innerWidth / targetRect.width;
-            const scaleY = window.innerHeight / targetRect.height;
-            const scale = Math.max(scaleX, scaleY) * 1.5;
+                gameBoard.innerHTML = cardsHTML;
 
-            overlay.style.transform = `scale(${scale})`;
-            overlay.style.borderRadius = '0px';
-            overlay.style.opacity = '0';
-            console.log(`Level transition expansion animation started: Scale=${scale.toFixed(2)}, Color=${color}`);
+                const cards = gameBoard.querySelectorAll('.card-item');
+                cards.forEach((cardElement, index) => {
+                    const character = characters[index]; 
+                    const imgElement = cardElement.querySelector('img');
 
-            const nextAction = () => {
-                console.log("Level transition expansion animation finished.");
-                overlay.classList.add('hidden');
-                overlay.style.transform = 'scale(1)';
-                overlay.style.opacity = '0';
-                overlay.style.backgroundColor = 'transparent';
-                state.timeouts.expansion = null;
+                    cardElement.addEventListener('click', () => {
+                        cardElement.classList.toggle('is-flipped');
+                    });
+                    
+                    imgElement.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        showImageModal(character.imgUrl, character.name);
+                    });
 
-                if (state.currentLevel < CONSTANTS.TOTAL_LEVELS) {
-                    state.currentLevel++;
-                    console.log("Proceeding to next level countdown...");
-                    startCountdown();
-                } else {
-                    console.log("Game won! Showing results...");
-                    state.isTransitioning = false;
-                    endGame(true); // Pass true for win
-                }
-            };
-
-            clearTimeout(state.timeouts.expansion);
-            state.timeouts.expansion = setTimeout(nextAction, CONSTANTS.EXPANSION_DURATION_MS);
-        }
-        // --- END MODIFIED ---
-
-        // --- handleIncorrectClick (Unchanged, vibration handled in endGame) ---
-        function handleIncorrectClick() { console.log("Incorrect click registered."); const isDuringDelay = state.isGameRunning && !state.isLevelActive && state.timeouts.countdown === null && !state.isTransitioning; const isActiveLevelClick = state.isLevelActive; if (isActiveLevelClick || isDuringDelay) { console.log(`Game Over triggered by incorrect click. Reason: ${isActiveLevelClick ? 'Active Level Miss' : 'Clicked During Delay'}`); playSound('E3', '4n', '0'); flashScreenRed(); endGame(false); } else { console.log(`Incorrect click ignored (Game Running=${state.isGameRunning}, Level Active=${state.isLevelActive}, Transitioning=${state.isTransitioning}, Countdown Active=${!!state.timeouts.countdown})`); } }
-        // --- flashScreenRed, createClickEffect (Unchanged) ---
-        function flashScreenRed() { const flashOverlay = document.createElement('div'); flashOverlay.className = 'flash-red-effect'; elements.gameContainer.appendChild(flashOverlay); setTimeout(() => { flashOverlay.remove(); }, 600); }
-        function createClickEffect(targetElement) { const rect = targetElement.getBoundingClientRect(); const effect = document.createElement('div'); effect.className = 'click-effect'; effect.style.left = `${rect.left + rect.width / 2}px`; effect.style.top = `${rect.top + rect.height / 2}px`; const effectSize = Math.max(rect.width, rect.height) * 1.2; effect.style.width = `${effectSize}px`; effect.style.height = `${effectSize}px`; const effectColor = state.currentColor; effect.style.backgroundColor = rgbaToString({ r: Math.min(255, effectColor.r + 30), g: Math.min(255, effectColor.g + 30), b: Math.min(255, effectColor.b + 30) }, 0.6); effect.style.transformOrigin = 'center'; effect.style.transform = 'translate(-50%, -50%) scale(0.8)'; elements.gameContainer.appendChild(effect); setTimeout(() => effect.remove(), 700); }
-
-        // --- MODIFIED: endGame (Added vibration) ---
-        function endGame(isWin) {
-            console.log(`Ending game. Win: ${isWin}`);
-            state.isGameRunning = false;
-            state.isLevelActive = false;
-            clearTimersAndIntervals();
-            elements.target.classList.add('hidden');
-            elements.expansionOverlay.classList.add('hidden');
-            state.isTransitioning = false;
-            elements.body.style.transition = 'background-color 0.5s linear';
-
-            if (isWin) {
-                playSound('G5', '2n', '+0.1');
-                // --- NEW: Vibrate on Win ---
-                triggerVibration([100, 50, 100]); // Double buzz for win
-                // --- END NEW ---
-                showResults(true);
-                triggerConfetti();
-            } else {
-                playSound('D3', '2n', '+0.1');
-                 // --- NEW: Vibrate on Lose/Error ---
-                triggerVibration([75, 50, 75]); // Different double buzz for lose/error
-                 // --- END NEW ---
-                showResults(false);
+                    setTimeout(() => {
+                        cardElement.classList.add('card-pop-in');
+                    }, index * 40);
+                });
             }
-        }
-        // --- END MODIFIED ---
 
-        // --- Show Results (Unchanged) ---
-        function showResults(isWin = true) {
-            console.log("Showing results screen...");
-            elements.resultsList.innerHTML = '';
-            state.levelTimes.forEach((time, index) => {
-                const li = document.createElement('li');
-                li.textContent = `Nivel ${index + 1}: ${time}ms`;
-                elements.resultsList.appendChild(li);
+            function handleGameStart() {
+                yourSecretCharacter = characters[Math.floor(Math.random() * characters.length)];
+
+                switchScreen('character-reveal-screen');
+                
+                const revealedCharacterImg = document.getElementById('revealed-character-img');
+                const revealedCharacterName = document.getElementById('revealed-character-name');
+                revealedCharacterImg.src = yourSecretCharacter.imgUrl;
+                revealedCharacterImg.alt = `Tu Personaje: ${yourSecretCharacter.name}`;
+                revealedCharacterName.textContent = yourSecretCharacter.name;
+
+                setTimeout(() => {
+                    showGameScreen();
+                }, 4000);
+            }
+            
+            function showGameScreen() {
+                switchScreen('game-screen');
+                body.classList.remove('overflow-hidden');
+                
+                const yourCharacterImg = document.getElementById('your-character-img');
+                const yourCharacterName = document.getElementById('your-character-name');
+                yourCharacterImg.src = yourSecretCharacter.imgUrl;
+                yourCharacterImg.alt = `Tu Personaje Secreto: ${yourSecretCharacter.name}`;
+                yourCharacterName.textContent = yourSecretCharacter.name;
+
+                createBoard();
+            }
+
+            function restartGame() {
+                switchScreen('start-screen');
+            }
+
+            // =========================================================================
+            //  MANEJO DE MODALES
+            // =========================================================================
+            
+            function showModal(modalElement) {
+                modalElement.classList.remove('hidden');
+                setTimeout(() => modalElement.classList.add('is-visible'), 10);
+            }
+            
+            function hideModal(modalElement) {
+                modalElement.classList.remove('is-visible');
+                setTimeout(() => modalElement.classList.add('hidden'), 400);
+            }
+
+            function showImageModal(imgSrc, name) {
+                enlargedCharacterImg.src = imgSrc;
+                enlargedCharacterName.textContent = name;
+                showModal(enlargedCharacterModal);
+            }
+
+            // =========================================================================
+            //  EVENT LISTENERS
+            // =========================================================================
+            startButton.addEventListener('click', handleGameStart);
+            
+            restartButton.addEventListener('click', () => {
+                showModal(restartConfirmModal);
             });
-            elements.totalTimeDisplay.textContent = `Tiempo total: ${state.totalTime}ms`;
-            const pillGradientClass = state.isMonochromaticMode ? 'bg-gradient-to-br from-amber-200 to-amber-500' : 'bg-gradient-to-r from-pink-500 to-orange-400';
-            elements.resultPill.className = 'h-full';
-            elements.resultPill.style.width = '0%';
-            elements.resultPill.style.opacity = '0';
-            void elements.resultPill.offsetWidth;
-            elements.resultPill.classList.add(...pillGradientClass.split(' '));
-            if (isWin) {
-                const score = calculateScore(state.totalTime);
-                elements.resultTitle.textContent = getResultMessage(score);
-                elements.scoreDisplay.textContent = `Puntuación: ${score}/100`;
-                elements.scoreDisplay.classList.remove('hidden');
-                elements.resultPill.style.width = `${score}%`;
-                elements.resultPill.style.opacity = '1';
-            } else {
-                elements.resultTitle.textContent = '¡Intentalo de Nuevo!';
-                elements.scoreDisplay.classList.add('hidden');
-                elements.resultPill.style.width = '100%';
-                elements.resultPill.style.opacity = '1';
-            }
-            elements.resultsMode.textContent = `Modo: ${state.isMonochromaticMode ? 'Monocromático (Alterno)' : 'Normal (Color)'}`;
-            showScreen(elements.resultsScreen);
-            console.log(`Result pill classes: ${elements.resultPill.className}`);
-            console.log(`Result pill target width: ${elements.resultPill.style.width}`);
-        }
+            
+            cancelRestartButton.addEventListener('click', () => {
+                hideModal(restartConfirmModal);
+});
+            
+            confirmRestartButton.addEventListener('click', () => {
+                hideModal(restartConfirmModal);
+                setTimeout(restartGame, 100); 
+            });
 
-        // --- Utility Functions (Calculate Score, Result Message, Confetti - Unchanged) ---
-        function calculateScore(totalTime) { if (!isFinite(totalTime) || totalTime < 0) return 0; const best = CONSTANTS.SCORE_BEST_TIME, worst = CONSTANTS.SCORE_WORST_TIME; if (totalTime <= best) return 100; if (totalTime >= worst) return 1; return Math.max(1, Math.round(100 - ((totalTime - best) / (worst - best)) * 99)); }
-        function getResultMessage(score) { if (score === 100) return "¡Perfecto!"; if (score >= 90) return "¡Increíble!"; if (score >= 75) return "¡Muy Bien!"; if (score >= 50) return "¡Buen Intento!"; return "¡Puedes Mejorar!"; }
-        function triggerConfetti() { const duration = 2 * 1000, animationEnd = Date.now() + duration; const defaults = { startVelocity: 25, spread: 360, ticks: 50, zIndex: 100 }; function randomInRange(min, max) { return Math.random() * (max - min) + min; } const interval = setInterval(function() { const timeLeft = animationEnd - Date.now(); if (timeLeft <= 0) return clearInterval(interval); const particleCount = 40 * (timeLeft / duration); confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.4, 0.6), y: Math.random() - 0.2 } }); }, 250); }
 
-        // --- Event Listeners (Unchanged from previous version) ---
-        elements.startButton.addEventListener('click', function() {
-             console.log("Start Button (Normal) clicked.");
-             startGame(false, this);
+            howToPlayButton.addEventListener('click', () => showModal(instructionsModal));
+            closeInstructionsButton.addEventListener('click', () => hideModal(instructionsModal));
+            
+            themeToggleButton.addEventListener('click', () => {
+                body.classList.toggle('light-mode');
+                sunIcon.classList.toggle('hidden');
+                moonIcon.classList.toggle('hidden');
+            });
+
+            document.getElementById('your-character').addEventListener('click', () => showImageModal(yourSecretCharacter.imgUrl, yourSecretCharacter.name));
+            enlargedCharacterModal.addEventListener('click', () => hideModal(enlargedCharacterModal));
+            
+            [instructionsModal, restartConfirmModal].forEach(modal => {
+                 modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        hideModal(modal);
+                    }
+                });
+            });
+
         });
-        elements.monochromaticButton.addEventListener('click', function() {
-             console.log("Start Button (Mono) clicked.");
-             startGame(true, this);
-        });
-        elements.resultsRestartButton.addEventListener('click', () => {
-            console.log("Results Restart Button clicked.");
-            playSound('A4', '8n', '0');
-            resetGameState();
-            showScreen(elements.startScreen);
-        });
-        function handleGameInteraction(event) {
-            if (event.type === 'touchstart' && state.isGameRunning) {
-                let targetElement = event.target;
-                let isButton = false;
-                while (targetElement != null) {
-                    if (targetElement.tagName === 'BUTTON') { isButton = true; break; }
-                    targetElement = targetElement.parentElement;
-                }
-                if (!isButton) { event.preventDefault(); }
-            }
-            if (!state.isGameRunning || state.isTransitioning) {
-                console.log(`Ignoring interaction: Game Running=${state.isGameRunning}, Transitioning=${state.isTransitioning}`);
-                return;
-            }
-            let isOnTarget = false;
-            const targetRect = elements.target.getBoundingClientRect();
-            const isTargetVisible = !!elements.target.offsetParent && window.getComputedStyle(elements.target).visibility !== 'hidden' && window.getComputedStyle(elements.target).display !== 'none';
-            if (isTargetVisible) {
-                let clientX, clientY;
-                if (event.type === 'mousedown') { clientX = event.clientX; clientY = event.clientY; }
-                else if (event.type === 'touchstart' && event.touches.length > 0) { clientX = event.touches[0].clientX; clientY = event.touches[0].clientY; }
-                if (clientX !== undefined && clientY !== undefined) {
-                    isOnTarget = clientX >= targetRect.left && clientX <= targetRect.right &&
-                                 clientY >= targetRect.top && clientY <= targetRect.bottom;
-                }
-            }
-            console.log(`Interaction details: isOnTarget=${isOnTarget}, isLevelActive=${state.isLevelActive}, isTargetVisible=${isTargetVisible}`);
-            if (isOnTarget && state.isLevelActive) {
-                handleCorrectClick(); // Vibration added inside this function
-            } else {
-                handleIncorrectClick(); // Vibration for loss added inside endGame(false)
-            }
-        }
-        elements.gameContainer.addEventListener('mousedown', handleGameInteraction);
-        elements.gameContainer.addEventListener('touchstart', handleGameInteraction, { passive: false });
-
-        // --- Initial Setup (Unchanged) ---
-        console.log("Initializing game setup...");
-        resetGameState();
-        showScreen(elements.startScreen);
-        console.log("Game setup complete. Waiting for user interaction.");
-
     </script>
-
 </body>
 </html>
-
