@@ -56,8 +56,14 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             transition: background-color 0.5s ease, color 0.5s ease;
+            /* == MODIFICACIÓN CSS: Se deshabilita la selección de texto en todo el juego == */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
+        /* Aunque la selección está deshabilitada, dejamos el estilo por si se habilita en algún elemento específico */
         ::selection {
             background-color: var(--color-primary-orange);
             color: white;
@@ -87,7 +93,6 @@
             100% { transform: scale(1.2) translate(10px, -20px); }
         }
 
-        /* == MODIFICACIÓN CSS: Transición de pantallas más rápida == */
         .screen {
             min-height: 100vh;
             display: flex;
@@ -102,7 +107,6 @@
             opacity: 0;
             transform: translateY(20px) scale(0.97); 
             pointer-events: none;
-            /* Se reduce el tiempo de transición de 0.5s a 0.3s */
             transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             will-change: transform, opacity; 
         }
@@ -454,13 +458,14 @@
           transition: filter 0.8s ease;
         }
 
+        /* === MODIFICACIÓN CSS: INICIO === */
+        /* Se unifica el efecto de la imagen al voltearse para ambos temas. */
+        /* Ahora, tanto en modo oscuro como claro, la imagen se pondrá en escala de grises y con el mismo brillo. */
         .is-flipped .card-front img {
-            filter: saturate(0) brightness(0.5);
-        }
-        
-        body.light-mode .is-flipped .card-front img {
             filter: grayscale(1) brightness(0.8);
         }
+        /* La regla específica para 'body.light-mode .is-flipped .card-front img' fue eliminada por ser redundante. */
+        /* === MODIFICACIÓN CSS: FIN === */
         
         .card-name-overlay {
             background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
@@ -560,6 +565,7 @@
             max-width: fit-content;
             box-shadow: none;
             overflow-y: visible;
+            cursor: grab;
         }
 
         .enlarged-image {
@@ -571,6 +577,7 @@
             border-radius: 1rem;
             box-shadow: 0 20px 50px var(--shadow-color);
             border: 2px solid var(--card-border-color);
+            pointer-events: none;
         }
         
         #confirm-restart-button:hover::before {
@@ -595,7 +602,8 @@
                     <button id="how-to-play-button" class="btn-modern">Cómo Jugar</button>
                 </div>
             </div>
-            <div class="absolute bottom-8 w-full flex justify-center">
+            <!-- MODIFICACIÓN: Se cambió "bottom-8" por "bottom-12" para subir el botón -->
+            <div class="absolute bottom-12 w-full flex justify-center">
                 <button id="theme-toggle-button" class="btn-modern btn-theme" aria-label="Cambiar tema">
                     <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -646,7 +654,7 @@
     <!-- Modal para agrandar la imagen -->
     <div id="enlarged-character-modal" class="modal-overlay hidden">
         <div class="modal-content enlarged-image-container flex flex-col items-center gap-4">
-            <img id="enlarged-character-img" src="" alt="Personaje agrandado" class="enlarged-image cursor-pointer">
+            <img id="enlarged-character-img" src="" alt="Personaje agrandado" class="enlarged-image">
             <p id="enlarged-character-name" class="text-2xl font-bold" style="color: var(--color-text-light); text-shadow: 0 2px 4px var(--shadow-color);"></p>
         </div>
     </div>
@@ -739,7 +747,6 @@
             // =========================================================================
             let yourSecretCharacter = null;
             
-            // == MODIFICACIÓN JS: Se reduce el tiempo de espera para que coincida con el CSS ==
             function switchScreen(toScreenId) {
                 const toScreen = document.getElementById(toScreenId);
                 const fromScreen = document.querySelector('.screen.is-active');
@@ -749,7 +756,6 @@
                 if (fromScreen && fromScreen !== toScreen) {
                     fromScreen.classList.remove('is-active');
 
-                    // Se reduce el tiempo de 500ms a 300ms para una transición aún más rápida
                     setTimeout(() => {
                         fromScreen.classList.add('hidden');
                         
@@ -759,7 +765,7 @@
                             toScreen.classList.add('is-active');
                         });
 
-                    }, 300); // IMPORTANTE: Este tiempo debe coincidir con la duración de la transición en CSS
+                    }, 300);
                 } else if (!fromScreen) {
                     toScreen.classList.remove('hidden');
                     toScreen.classList.add('is-active');
@@ -785,7 +791,7 @@
                             </div>
                             <div class="card-back">
                                 <span>QESQ</span>
-                                <span class="absolute bottom-2 text-sm font-normal opacity-70">${index + 1}</span>
+                                <!-- MODIFICACIÓN: Se eliminó el <span> que mostraba el número (index + 1) -->
                             </div>
                         </div>
                     </div>
@@ -796,15 +802,34 @@
                 const cards = gameBoard.querySelectorAll('.card-item');
                 cards.forEach((cardElement, index) => {
                     const character = characters[index]; 
-                    const imgElement = cardElement.querySelector('img');
-
+                    
+                    // == MODIFICACIÓN JS: Se mueven los listeners de 'imgElement' a 'cardElement' ==
+                    // Esto asegura que la interacción de mantener presionado funcione en toda la tarjeta,
+                    // incluyendo el nombre del personaje.
+                    
                     cardElement.addEventListener('click', () => {
                         cardElement.classList.toggle('is-flipped');
                     });
                     
-                    imgElement.addEventListener('contextmenu', (e) => {
+                    cardElement.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         showImageModal(character.imgUrl, character.name);
+                    });
+
+                    let pressTimer;
+                    cardElement.addEventListener('touchstart', (e) => {
+                        // Solo prevenimos la acción por defecto si el temporizador se completa.
+                        pressTimer = setTimeout(() => {
+                            e.preventDefault();
+                            showImageModal(character.imgUrl, character.name);
+                        }, 500); 
+                    }, { passive: true }); // Usamos passive: true para mejorar el scroll si no es un long-press
+
+                    cardElement.addEventListener('touchend', () => {
+                        clearTimeout(pressTimer);
+                    });
+                     cardElement.addEventListener('touchmove', () => {
+                        clearTimeout(pressTimer);
                     });
 
                     setTimeout(() => {
@@ -847,9 +872,13 @@
             }
 
             // =========================================================================
-            //  MANEJO DE MODALES
+            //  MANEJO DE MODALES Y LÓGICA DE DESLIZAR
             // =========================================================================
             
+            const enlargedImageContainer = enlargedCharacterModal.querySelector('.modal-content');
+            let isDragging = false, hasDragged = false;
+            let startX = 0, startY = 0;
+
             function showModal(modalElement) {
                 modalElement.classList.remove('hidden');
                 setTimeout(() => modalElement.classList.add('is-visible'), 10);
@@ -857,14 +886,93 @@
             
             function hideModal(modalElement) {
                 modalElement.classList.remove('is-visible');
-                setTimeout(() => modalElement.classList.add('hidden'), 400);
+                setTimeout(() => {
+                    modalElement.classList.add('hidden');
+                    if (modalElement.id === 'enlarged-character-modal') {
+                        enlargedImageContainer.style.transition = '';
+                        enlargedImageContainer.style.transform = '';
+                        enlargedImageContainer.style.opacity = '';
+                    }
+                }, 400);
             }
 
             function showImageModal(imgSrc, name) {
                 enlargedCharacterImg.src = imgSrc;
                 enlargedCharacterName.textContent = name;
+                
+                enlargedImageContainer.style.transition = 'none';
+                enlargedImageContainer.style.transform = '';
+                enlargedImageContainer.style.opacity = '';
+
                 showModal(enlargedCharacterModal);
             }
+            
+            // --- Funciones para deslizar la tarjeta ---
+            
+            const dragStart = (e) => {
+                if (e.target.tagName === 'P') return;
+
+                isDragging = true;
+                startX = e.pageX || e.touches[0].pageX;
+                startY = e.pageY || e.touches[0].pageY;
+                hasDragged = false;
+                enlargedImageContainer.style.transition = 'none';
+                enlargedImageContainer.style.cursor = 'grabbing';
+            };
+
+            const dragMove = (e) => {
+                if (!isDragging) return;
+
+                const currentX = e.pageX || e.touches[0].pageX;
+                const currentY = e.pageY || e.touches[0].pageY;
+                const deltaX = currentX - startX;
+                const deltaY = currentY - startY;
+
+                if (!hasDragged && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
+                   hasDragged = true;
+                }
+                
+                if (hasDragged) {
+                    e.preventDefault();
+                    const rotation = deltaX * 0.1;
+                    enlargedImageContainer.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
+                }
+            };
+
+            const dragEnd = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                enlargedImageContainer.style.cursor = 'grab';
+                
+                if (hasDragged) {
+                    const currentX = e.pageX || e.changedTouches[0].pageX;
+                    const currentY = e.pageY || e.changedTouches[0].pageY;
+                    const deltaX = currentX - startX;
+                    const deltaY = currentY - startY;
+                    const swipeThreshold = 30; 
+
+                    enlargedImageContainer.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+
+                    if (Math.abs(deltaX) > swipeThreshold || Math.abs(deltaY) > swipeThreshold) {
+                        let endX, endY;
+
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            endX = deltaX > 0 ? window.innerWidth : -window.innerWidth;
+                            endY = deltaY;
+                        } else {
+                            endY = deltaY > 0 ? window.innerHeight : -window.innerHeight;
+                            endX = deltaX;
+                        }
+                        
+                        enlargedImageContainer.style.transform = `translate(${endX}px, ${endY}px) rotate(${deltaX * 0.2}deg)`;
+                        enlargedImageContainer.style.opacity = '0';
+                        
+                        setTimeout(() => hideModal(enlargedCharacterModal), 50);
+                    } else {
+                        enlargedImageContainer.style.transform = 'translate(0, 0) rotate(0deg)';
+                    }
+                }
+            };
 
             // =========================================================================
             //  EVENT LISTENERS
@@ -877,13 +985,12 @@
             
             cancelRestartButton.addEventListener('click', () => {
                 hideModal(restartConfirmModal);
-});
+            });
             
             confirmRestartButton.addEventListener('click', () => {
                 hideModal(restartConfirmModal);
                 setTimeout(restartGame, 100); 
             });
-
 
             howToPlayButton.addEventListener('click', () => showModal(instructionsModal));
             closeInstructionsButton.addEventListener('click', () => hideModal(instructionsModal));
@@ -895,7 +1002,21 @@
             });
 
             document.getElementById('your-character').addEventListener('click', () => showImageModal(yourSecretCharacter.imgUrl, yourSecretCharacter.name));
-            enlargedCharacterModal.addEventListener('click', () => hideModal(enlargedCharacterModal));
+            
+            enlargedCharacterModal.addEventListener('click', () => {
+                if (!hasDragged) {
+                    hideModal(enlargedCharacterModal);
+                }
+            });
+
+            enlargedImageContainer.addEventListener('mousedown', dragStart);
+            enlargedImageContainer.addEventListener('touchstart', dragStart, { passive: false });
+
+            window.addEventListener('mousemove', dragMove);
+            window.addEventListener('touchmove', dragMove, { passive: false });
+
+            window.addEventListener('mouseup', dragEnd);
+            window.addEventListener('touchend', dragEnd);
             
             [instructionsModal, restartConfirmModal].forEach(modal => {
                  modal.addEventListener('click', (e) => {
