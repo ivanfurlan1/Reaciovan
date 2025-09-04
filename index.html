@@ -3,92 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QESQ - Nueva Era (Animación Mejorada)</title>
+    <title>QESQ - Varios Modos</title>
     
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Anton (Títulos), Special Elite (Cuerpo) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Special+Elite&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Tone.js - Biblioteca para el audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
+    <!-- Font Awesome para el ícono de reinicio -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ99V2m8sL4YkF7yCqS3rKzW3L+f7I4t8b5OQ+2N9L+q1gJ2B+rL+pG+i3+A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <style>
         /*
         ==========================================================================
-        CONFIGURACIÓN Y VARIABLES CSS (MODO OSCURO POR DEFECTO)
+        PALETA DE COLORES Y ESTILO BASE - VINTAGE CINEMATIC
         ==========================================================================
         */
         :root {
-            --color-background: #0A0A1A; /* Un azul casi negro muy profundo */
-            --color-primary-orange: #FF4D00;
-            --color-secondary-blue: #00A2FF;
-            --color-accent-red: #E5005A;
-            --color-text-light: #E0E0E0;
-            --color-text-dark: #A0A0A0;
-            --card-bg-color: rgba(22, 28, 51, 0.5); /* Azul oscuro semi-transparente */
-            --card-border-color: rgba(60, 70, 110, 0.3);
-            --blur-intensity: 12px;
-            --shadow-color: rgba(0, 0, 0, 0.5);
-            --header-shadow-color: rgba(0,0,0,0.2);
-        }
-
-        /*
-        ==========================================================================
-        VARIABLES CSS PARA MODO CLARO
-        ==========================================================================
-        */
-        body.light-mode {
-            --color-background: #F0F2F5; /* Un gris muy claro y suave */
-            --color-text-light: #1A202C; /* Texto oscuro principal */
-            --color-text-dark: #5A6472; /* Texto oscuro secundario */
-            --card-bg-color: rgba(255, 255, 255, 0.6); /* Blanco semi-transparente */
-            --card-border-color: rgba(0, 0, 0, 0.1);
-            --shadow-color: rgba(0, 0, 0, 0.25);
-            --header-shadow-color: rgba(0,0,0,0.1);
+            --color-background: #101010; 
+            --color-paper: #f1e9d2; 
+            --color-paper-text: #2c2c2c; 
+            --color-primary-yellow: #FFC300; 
+            --color-accent-red: #C70039; 
+            --color-shadow-red: #900C3F; 
+            --color-text-light: #EAEAEA;
+            --card-border-color: rgba(255, 195, 0, 0.4);
+            --shadow-color: rgba(0, 0, 0, 0.7);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Special Elite', monospace;
             background-color: var(--color-background);
             color: var(--color-text-light);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            transition: background-color 0.5s ease, color 0.5s ease;
             user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            cursor: default;
+            overscroll-behavior-y: contain;
+        }
+        
+        body.allow-scroll {
+            overflow-y: auto;
         }
 
         ::selection {
-            background-color: var(--color-primary-orange);
-            color: white;
+            background-color: var(--color-primary-yellow);
+            color: black;
+        }
+        
+        .main-container {
+            filter: sepia(0.15) saturate(1.2) contrast(1.05);
+            transition: filter 0.8s ease;
+        }
+        
+        .main-container.win-effect-filter {
+            filter: grayscale(1) contrast(1.5) brightness(0.6);
         }
 
         /*
         ==========================================================================
-        EFECTOS DE FONDO Y CONTENEDOR PRINCIPAL
+        EFECTOS CINEMÁTICOS GLOBALES (VIÑETA, BARRAS, GRANO)
         ==========================================================================
         */
-        .main-container::before {
-            content: '';
+        
+        .film-grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+        
+        .film-grain-overlay::before {
+            content: "";
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.18;
+        }
+
+        .vignette-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: 
-                radial-gradient(circle at 15% 25%, var(--color-secondary-blue), transparent 30%),
-                radial-gradient(circle at 85% 75%, var(--color-primary-orange), transparent 40%);
-            opacity: 0.1;
-            filter: blur(100px);
-            z-index: -1;
-            animation: background-lights 20s infinite alternate ease-in-out;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.85) 100%);
+            z-index: 998;
+            pointer-events: none;
         }
 
-        @keyframes background-lights {
-            0% { transform: scale(1) translate(0, 0); }
-            100% { transform: scale(1.2) translate(10px, -20px); }
+        .letterbox {
+            position: fixed;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background-color: black;
+            z-index: 1001;
+            transition: height 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #top-letterbox { top: 0; }
+        #bottom-letterbox { bottom: 0; }
+        
+        body.cinematic-intro #top-letterbox,
+        body.cinematic-intro #bottom-letterbox {
+            height: 18vh;
+        }
+
+        /*
+        ==========================================================================
+        CONTENEDOR PRINCIPAL Y PANTALLAS
+        ==========================================================================
+        */
+
+        .character-image-container {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: inherit; 
+        }
+
+        .character-image-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.55;
+        }
+       
+        #revealed-character-img,
+        #your-character-img,
+        #game-board .card-front img,
+        #enlarged-character-img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.25) contrast(1.1) brightness(0.95) saturate(0.9);
+        }
+        #enlarged-character-img {
+            object-fit: contain;
         }
 
         .screen {
@@ -103,454 +175,549 @@
             top: 0;
             left: 0;
             opacity: 0;
-            transform: translateY(20px) scale(0.97); 
             pointer-events: none;
-            transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1), transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-            will-change: transform, opacity; 
+            transition: opacity 0.5s ease-in-out, filter 0.5s ease-in-out; 
+            filter: blur(10px);
+            will-change: opacity, filter; 
         }
 
         .screen.is-active {
             opacity: 1;
-            transform: translateY(0) scale(1);
             pointer-events: auto;
+            filter: blur(0);
+        }
+        
+        .screen.is-fading-out {
+            opacity: 0;
+            pointer-events: none;
+            filter: blur(10px);
         }
         
         .screen.hidden {
             display: none;
         }
-
-        /*
-        ==========================================================================
-        PANTALLA DE INICIO
-        ==========================================================================
-        */
-        #start-screen h1 {
-            font-weight: 900;
-            font-size: clamp(3rem, 15vw, 8rem);
-            letter-spacing: -0.05em;
-            background-image: linear-gradient(45deg, var(--color-primary-orange), var(--color-accent-red));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            animation: title-glow 5s infinite alternate, float-in 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
         
-        @keyframes float-in {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes title-glow {
-            from { text-shadow: 0 0 10px rgba(255, 77, 0, 0.4); }
-            to { text-shadow: 0 0 25px rgba(229, 0, 90, 0.6); }
-        }
-        
-        body.light-mode #start-screen h1 {
-            animation: float-in 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            text-shadow: none;
-        }
-
-        .btn-modern {
-            position: relative;
-            padding: 0.8rem 2.5rem;
-            border: 1px solid var(--card-border-color);
-            border-radius: 50px;
-            background: var(--card-bg-color);
-            backdrop-filter: blur(var(--blur-intensity));
-            color: var(--color-text-light);
-            font-weight: 600;
-            font-size: 1.1rem;
-            overflow: hidden;
-            transition: color 0.4s, transform 0.2s, box-shadow 0.4s, background-color 0.4s;
-            transform: scale(1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            animation: fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        
-        #start-button { animation-delay: 0.2s; }
-        #how-to-play-button { animation-delay: 0.3s; }
-        #theme-toggle-button { animation-delay: 0.4s; }
-
-
-        @keyframes fade-in-up {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .btn-modern::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: radial-gradient(circle, var(--color-primary-orange) 0%, transparent 80%);
-            border-radius: 50%;
-            transition: width 0.6s, height 0.6s;
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            z-index: -1;
-        }
-
-        .btn-modern:hover {
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(255, 77, 0, 0.3);
-        }
-        
-        body.light-mode .btn-modern:hover {
-            color: #fff;
-        }
-        
-        body.light-mode #start-button:hover, body.light-mode #how-to-play-button:hover, body.light-mode #close-instructions-button:hover {
-            color: #fff;
-        }
-
-        .btn-modern:hover::before {
-            width: 300px;
-            height: 300px;
-            opacity: 0.6;
-        }
-        
-        .btn-theme {
-            padding: 0.8rem;
-            width: 48px;
-            height: 48px;
-        }
-
-        /*
-        ==========================================================================
-        PANTALLA DE REVELACIÓN DE PERSONAJE
-        ==========================================================================
-        */
-        #character-reveal-screen h2 {
-            font-weight: 700;
-            font-size: clamp(1.5rem, 5vw, 3rem);
-            text-shadow: 0 0 15px rgba(0, 162, 255, 0.3);
-            color: var(--color-text-dark);
-            opacity: 0;
-            animation: fade-in-up 1s 0.2s forwards;
-        }
-
-        body.light-mode #character-reveal-screen h2 {
-            text-shadow: none;
-        }
-
-        .revealed-card-container {
-            perspective: 2000px;
-            width: clamp(250px, 50vw, 320px);
-            aspect-ratio: 4 / 5;
-        }
-
-        #revealed-character-card {
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            animation: reveal-animation 3s forwards cubic-bezier(0.22, 1, 0.36, 1);
-            opacity: 0;
-            transform: translateY(50px) rotateX(70deg) scale(0.8);
-        }
-        
-        @keyframes reveal-animation {
-            0% {
-                opacity: 0;
-                transform: translateY(50px) rotateX(70deg) scale(0.8);
-            }
-            60% {
-                opacity: 1;
-                transform: translateY(0) rotateX(0deg) scale(1.1);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) rotateX(0deg) scale(1);
-            }
-        }
-
-        .revealed-card-inner {
-            width: 100%; height: 100%;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px var(--shadow-color);
-            position: relative;
-        }
-
-        .revealed-card-inner img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-
-        .revealed-card-inner::before, .revealed-card-inner::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .revealed-card-inner::before {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-        }
-        
-        body.light-mode .revealed-card-inner::before {
-             border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .revealed-card-inner::after {
-            background: linear-gradient(160deg, rgba(255,255,255,0.2) 0%, transparent 30%);
-            animation: card-glint 5s infinite ease-in-out;
-        }
-
-        @keyframes card-glint {
-            0%, 100% { transform: translateX(-150%) translateY(-50%) rotate(45deg); }
-            50% { transform: translateX(150%) translateY(50%) rotate(45deg); }
-        }
-
-        #revealed-character-name {
-            font-size: 1.8rem;
-            font-weight: 600;
-            opacity: 0;
-            animation: text-fade-in 1s 1.5s forwards;
-            color: var(--color-text-light);
-        }
-        
-        @keyframes text-fade-in {
-            to { opacity: 1; }
-        }
-
-        /*
-        ==========================================================================
-        PANTALLA DE JUEGO
-        ==========================================================================
-        */
         #game-screen {
+            position: relative;
+            height: auto;
+            min-height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             justify-content: flex-start;
         }
         
         .board-header {
             width: 100%;
-            max-width: 1200px;
-            padding: 0.75rem 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: var(--card-bg-color);
-            border: 1px solid var(--card-border-color);
-            border-radius: 1rem;
-            backdrop-filter: blur(var(--blur-intensity));
-            box-shadow: 0 10px 30px var(--header-shadow-color);
+            background: #111;
+            border-bottom: 3px solid var(--color-primary-yellow);
             opacity: 0;
-            transform: translateY(-20px);
-            animation: header-fade-in 0.8s 0.2s forwards;
+            transform: translateY(-100%);
+            animation: slide-down 0.8s 0.2s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        
-        @keyframes header-fade-in {
+
+        @keyframes slide-down {
           to { opacity: 1; transform: translateY(0); }
         }
-        
-        #your-character {
-            width: 4rem; height: 4rem;
-            border-radius: 50%;
-            border: 2px solid var(--color-secondary-blue);
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(0, 162, 255, 0.5), inset 0 0 5px var(--shadow-color);
-            transition: transform 0.3s ease;
-        }
-        
-        #your-character:hover {
-            transform: scale(1.1);
-        }
-        
-        #restart-button {
-            background: var(--card-bg-color);
-            border: 1px solid var(--card-border-color);
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.3s;
-            color: var(--color-text-light);
-        }
 
-        #restart-button:hover {
-            background: var(--color-accent-red);
-            color: white;
-            border-color: transparent;
-            transform: scale(1.1) rotate(45deg);
-            box-shadow: 0 0 20px rgba(229, 0, 90, 0.4);
-        }
-        
-        #restart-button svg {
-            transition: transform 0.3s;
-        }
-        
-        #restart-button:hover svg {
-             transform: rotate(-45deg);
-        }
-        
-        body.light-mode #restart-button:hover {
-            color: white;
-        }
-
-        #game-board {
-            width: 100%;
-            max-width: 1200px;
-            perspective: 3000px;
-        }
-
-        .card-item {
-            perspective: 1500px;
-            transition: transform 0.3s ease;
-        }
-        
-        /* === INICIO: ESTILO PARA EL EASTER EGG === */
-        .card-item.easter-egg-active {
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            will-change: transform;
-            z-index: 50; /* Para que se superpongan al moverse */
-        }
-        /* === FIN: ESTILO PARA EL EASTER EGG === */
-
-        .card-item:hover {
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
-        .card-inner {
-            position: relative;
-            width: 100%; height: 100%;
-            transition: transform 0.6s ease;
-            transform-style: preserve-3d;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 20px var(--shadow-color);
-        }
-
-        .is-flipped .card-inner {
-            transform: rotateX(180deg);
-        }
-
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%; height: 100%;
-            backface-visibility: hidden;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            border: 1px solid var(--card-border-color);
-        }
-        
-        .card-front {
-            background-color: var(--color-background);
-        }
-        
-        .card-front img {
-          filter: saturate(1.1);
-          transition: filter 0.8s ease;
-        }
-
-        .is-flipped .card-front img {
-            filter: grayscale(1) brightness(0.8);
-        }
-        
-        .card-name-overlay {
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            text-shadow: 0 1px 3px black;
-            color: white;
-        }
-        
-        body.light-mode .card-name-overlay {
-            color: var(--color-text-light);
-            background: linear-gradient(to top, rgba(255,255,255,0.8), transparent);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
-
-        .card-back {
-            background: var(--card-bg-color);
-            backdrop-filter: blur(var(--blur-intensity));
-            transform: rotateX(180deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 2rem;
-            letter-spacing: -0.05em;
-            color: rgba(255, 255, 255, 0.4);
-            text-shadow: 0 0 10px rgba(0, 162, 255, 0.2);
-            position: relative;
-        }
-        
-        body.light-mode .card-back {
-            color: rgba(0, 0, 0, 0.4);
-            text-shadow: none;
-        }
-        
         /*
         ==========================================================================
-        INICIO: MODIFICACIÓN DE LA ANIMACIÓN DE ENTRADA DE LAS TARJETAS
+        RESTO DE ESTILOS
         ==========================================================================
         */
-        
-        /* Se elimina la clase y animación .card-pop-in */
 
-        /* Nueva animación más suave */
-        @keyframes card-entry-animation {
-            from {
-                opacity: 0;
-                transform: translateY(25px) scale(0.95);
-            }
+        #start-screen h1, #mode-selection-screen h2 {
+            font-family: 'Anton', sans-serif;
+            font-weight: 400;
+            font-size: clamp(4rem, 20vw, 12rem);
+            letter-spacing: 0.02em;
+            color: var(--color-primary-yellow);
+            text-transform: uppercase;
+            text-shadow: 4px 4px 0px var(--color-accent-red), 8px 8px 0px var(--color-shadow-red);
+            animation: neon-flicker 2s infinite ease-in-out;
+            will-change: opacity, text-shadow;
+        }
+
+        #mode-selection-screen h2 {
+            font-size: clamp(2rem, 10vw, 6rem);
+            text-shadow: 2px 2px 0px var(--color-accent-red), 4px 4px 0px var(--color-shadow-red);
+        }
+        
+        @keyframes neon-flicker {
+            0%, 100% { opacity: 1; text-shadow: 4px 4px 0px var(--color-accent-red), 8px 8px 0px var(--color-shadow-red); }
+            1% { opacity: 0.6; text-shadow: none; }
+            3% { opacity: 0.8; text-shadow: 2px 2px 0px var(--color-accent-red); }
+            5% { opacity: 0.5; text-shadow: none; }
+            7% { opacity: 1; text-shadow: 4px 4px 0px var(--color-accent-red), 8px 8px 0px var(--color-shadow-red); }
+            8% { opacity: 0.6; }
+            10% { opacity: 0.9; }
+            15% { opacity: 0.1; text-shadow: none; }
+            16% { opacity: 1; text-shadow: 4px 4px 0px var(--color-accent-red), 8px 8px 0px var(--color-shadow-red); }
+            20% { opacity: 0.3; text-shadow: none; }
+            21% { opacity: 1; text-shadow: 4px 4px 0px var(--color-accent-red); }
+            22% { opacity: 0.7; }
+            25% { opacity: 1; text-shadow: 4px 4px 0px var(--color-accent-red), 8px 8px 0px var(--color-shadow-red); }
+            30%, 80% { opacity: 1; }
+            81% { opacity: 0.4; }
+            82% { opacity: 1; }
+            83% { opacity: 0.5; }
+            84% { opacity: 1; }
+        }
+
+        .btn-cinematic {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            padding: 0.75rem 2.5rem;
+            background-color: var(--color-primary-yellow);
+            color: black;
+            border: 3px solid black;
+            box-shadow: 4px 4px 0px black;
+            text-transform: uppercase;
+            transition: all 0.2s ease-out;
+            transform: scale(1);
+            cursor: pointer;
+            opacity: 0;
+            animation: fade-in-up 1s 0.8s forwards; 
+            width: clamp(150px, 40vw, 200px);
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        .btn-wide {
+             width: clamp(200px, 60vw, 250px);
+        }
+
+        .btn-cinematic:hover {
+            background-color: var(--color-accent-red);
+            color: var(--color-text-light);
+            transform: scale(1.05) translate(-2px, -2px);
+            box-shadow: 6px 6px 0px black;
+        }
+        
+        .btn-cinematic:active {
+            transform: scale(1) translate(4px, 4px);
+            box-shadow: 0px 0px 0px black;
+        }
+
+        #mode-selection-screen .btn-cinematic {
+            animation-delay: 0.5s;
+        }
+        
+        #mode-selection-screen .btn-cinematic:nth-child(2) { animation-delay: 0.7s; }
+        #mode-selection-screen .btn-cinematic:nth-child(3) { animation-delay: 0.9s; }
+        #mode-selection-screen .btn-cinematic:nth-child(4) { animation-delay: 1.1s; }
+
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #character-reveal-screen {
+            --dossier-width: clamp(300px, 60vw, 400px);
+            --dossier-aspect: 4 / 5.5;
+            justify-content: center;
+        }
+
+        #character-reveal-screen h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fade-in-up 1s 0.5s forwards;
+        }
+
+        .dossier-container {
+            width: var(--dossier-width);
+            aspect-ratio: var(--dossier-aspect);
+            position: relative;
+            perspective: 1500px;
+            opacity: 0;
+            transform: translateX(-100vw);
+            animation: slide-in-dossier 1.2s 1s forwards cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        @keyframes slide-in-dossier {
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .dossier-cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e4cda7;
+            border: 1px solid #c9a273;
+            border-radius: 8px;
+            transform-origin: left center;
+            transition: transform 1.2s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: inset -5px 0 15px rgba(0,0,0,0.2);
+            animation: open-dossier 1.5s 2.5s forwards cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+        .dossier-cover::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            right: -20px;
+            width: 40px;
+            height: 25px;
+            background-color: #e4cda7;
+            border: 1px solid #c9a273;
+            border-left: none;
+            border-radius: 0 4px 4px 0;
+        }
+        .dossier-cover h3 {
+            font-family: 'Anton', sans-serif;
+            font-size: 2.5rem;
+            color: var(--color-accent-red);
+            border: 3px dashed var(--color-accent-red);
+            padding: 0.5rem 1rem;
+            transform: rotate(-5deg);
+        }
+        
+        @keyframes open-dossier {
+            to { transform: rotateY(-140deg); }
+        }
+
+        .dossier-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90%;
+            filter: drop-shadow(0 10px 15px var(--shadow-color));
+            opacity: 0;
+            animation: reveal-card-content 1s 3s forwards;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        @keyframes reveal-card-content {
+            from { opacity: 0; transform: translate(-50%, -50%) translateX(-20px); }
+            to { opacity: 1; transform: translate(-50%, -50%) translateX(0); }
+        }
+        
+        .dossier-content .revealed-card-inner {
+            border: 4px solid var(--color-text-light);
+            border-radius: 4px;
+            width: 100%;
+            height: 100%;
+            background-color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        #revealed-character-name {
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(2rem, 6vw, 2.5rem);
+            color: var(--color-primary-yellow);
+            text-shadow: 2px 2px 0 var(--color-accent-red);
+            text-transform: uppercase;
+            opacity: 0;
+            margin-top: 1rem;
+            animation: fade-in-up 1s 3.8s forwards;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .text-reveal-container {
+            background-color: var(--color-paper);
+            color: var(--color-paper-text);
+            padding: 2rem;
+            border: 1px solid #a18a5b;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: clamp(320px, 90vw, 600px);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            animation: fade-in-telegram 0.8s 1s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes fade-in-telegram {
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
 
-        /* Nueva clase que se aplicará con JS para activar la animación */
-        .card-item.is-entering {
-            opacity: 0; /* Estado inicial para evitar parpadeos */
-            animation: card-entry-animation 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        .text-reveal-container h3 {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            color: var(--color-accent-red);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px dashed rgba(0,0,0,0.2);
+        }
+
+        #revealed-text-content {
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(3rem, 10vw, 5rem);
+            color: var(--color-paper-text);
+            text-transform: uppercase;
+            line-height: 1.1;
+            
+            overflow: hidden; 
+            white-space: nowrap; 
+            margin: 0 auto; 
+            letter-spacing: .05em; 
+            border-right: .1em solid var(--color-accent-red); 
+            width: 0;
+            animation: 
+                typing 2s steps(var(--char-count, 20), end) 2s forwards,
+                blink-caret .75s step-end infinite 2s;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--color-accent-red); }
         }
         
-        /*
-        ==========================================================================
-        FIN: MODIFICACIÓN DE LA ANIMACIÓN DE ENTRADA DE LAS TARJETAS
-        ==========================================================================
-        */
+        #your-character {
+            width: 4.5rem; height: 4.5rem;
+            border-radius: 4px;
+            border: 3px solid var(--color-primary-yellow);
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(255, 195, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
         
+        #your-character:hover {
+            transform: scale(1.1);
+        }
+
+        #your-character-name {
+            font-family: 'Anton', sans-serif;
+            letter-spacing: 0.05em;
+            color: var(--color-primary-yellow);
+        }
+        
+        #restart-button {
+            background: transparent;
+            border: 2px solid var(--color-text-light);
+            width: 48px; height: 48px;
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+            color: var(--color-text-light);
+            font-size: 20px;
+        }
+        #restart-button:hover {
+            background: var(--color-accent-red);
+            color: var(--color-text-light);
+            border-color: var(--color-accent-red);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        #game-board {
+            width: 100%;
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+            padding: 0.5rem;
+        }
+        @media (min-width: 640px) {
+            #game-board {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.75rem;
+                padding: 0.75rem;
+            }
+        }
+        @media (min-width: 768px) {
+            #game-board {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 1rem;
+                padding: 1rem;
+            }
+        }
+        @media (min-width: 1024px) {
+            #game-board {
+                grid-template-columns: repeat(8, minmax(0, 1fr));
+                gap: 1rem;
+            }
+        }
+
         /*
         ==========================================================================
-        MODALES
+        NUEVA ANIMACIÓN DE TARJETA MEJORADA
         ==========================================================================
         */
+        .card-item {
+            transition: transform 0.3s ease, filter 0.3s ease;
+            will-change: transform;
+            /* AÑADIDO: Perspectiva para el efecto 3D del giro */
+            perspective: 1200px;
+        }
+        
+        .card-item:hover {
+            transform: scale(1.08);
+            z-index: 10;
+        }
+        
+        .card-item.easter-egg-active {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            will-change: transform;
+            z-index: 50;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%; height: 100%;
+            /* MODIFICADO: Transición más refinada y prolongada, incluye la sombra */
+            transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            transform-style: preserve-3d;
+            border-radius: 6px;
+            /* MODIFICADO: Sombra inicial más sutil */
+            box-shadow: 0 8px 18px var(--shadow-color);
+            will-change: transform, box-shadow;
+        }
+
+        /* NUEVO: Pseudo-elemento para el efecto de luz sutil durante el giro */
+        .card-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 55%, rgba(255, 195, 0, 0.25), transparent 70%);
+            opacity: 0;
+            border-radius: inherit;
+            transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .is-flipped .card-inner {
+            /* MODIFICADO: Se levanta sutilmente para un mejor efecto 3D */
+            transform: rotateX(180deg) translateZ(10px);
+            /* MODIFICADO: La sombra crece para simular la elevación */
+            box-shadow: 0 30px 40px var(--shadow-color);
+        }
+
+        /* NUEVO: Activa la luz al girar la tarjeta */
+        .is-flipped .card-inner::before {
+            opacity: 1;
+            transition-delay: 0.1s; /* La luz aparece un poco después de iniciar el giro */
+        }
+        /* ======================================================================= */
+
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+        
+        .card-front .character-image-container img {
+          transition: filter 0.7s ease;
+          will-change: filter;
+        }
+
+        .is-flipped .card-front .character-image-container img {
+            filter: grayscale(1) brightness(0.25) contrast(1.2) sepia(0.5) hue-rotate(-20deg);
+        }
+        
+        .card-name-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            text-shadow: 1px 1px 2px black;
+            color: white;
+            font-size: 1.1rem;
+            font-family: 'Anton', sans-serif;
+            letter-spacing: 0.05em;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.5rem;
+            text-align: center;
+            z-index: 3;
+            line-height: 1;
+        }
+
+        .card-front.no-image {
+            background-color: var(--color-paper);
+            color: var(--color-paper-text);
+            border: 2px solid #a18a5b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .card-front.no-image .card-name-overlay {
+            position: static;
+            background: none;
+            color: var(--color-paper-text);
+            
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(1.5rem, 6vw, 2rem); 
+            text-shadow: none;
+            text-transform: uppercase;
+            letter-spacing: 0.02em; 
+
+            white-space: normal;
+            line-height: 1; 
+        }
+        
+        .card-back {
+            background-color: #111;
+            background-image:
+                linear-gradient(rgba(255,195,0,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,195,0,0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 2px solid var(--color-primary-yellow);
+            transform: rotateX(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Anton', sans-serif;
+            font-size: 2rem;
+            color: var(--color-primary-yellow);
+            text-shadow: 2px 2px 0 var(--color-accent-red);
+        }
+        
+        .card-item.is-entering {
+            opacity: 0;
+            animation: card-entry-animation 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes card-entry-animation {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background-color: rgba(10, 10, 26, 0.7);
-            backdrop-filter: blur(var(--blur-intensity));
+            background-color: rgba(0, 0, 0, 0.8);
             z-index: 100;
             opacity: 0;
-            transition: opacity 0.4s ease-in-out, background-color 0.5s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        body.light-mode .modal-overlay {
-            background-color: rgba(240, 242, 245, 0.7);
+            transition: opacity 0.4s ease-in-out;
+            display: flex; justify-content: center; align-items: center;
         }
 
         .modal-overlay.is-visible {
@@ -561,14 +728,13 @@
             opacity: 0;
             transform: scale(0.9);
             transition: opacity 0.4s 0.1s ease-in-out, transform 0.4s 0.1s ease-in-out;
-            background: var(--card-bg-color);
-            border: 1px solid var(--card-border-color);
-            border-radius: 1rem;
-            padding: 2rem;
+            background: var(--color-background);
+            border: 3px solid var(--color-primary-yellow);
+            padding: 2.5rem;
             max-width: 600px;
             width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
+            box-shadow: 0 0 0 5px black, 0 0 0 8px var(--color-primary-yellow);
+            will-change: transform, opacity;
         }
         
         .is-visible .modal-content {
@@ -576,260 +742,574 @@
             transform: scale(1);
         }
         
-        .modal-content.enlarged-image-container {
-            background: transparent;
-            border: none;
-            padding: 0;
-            width: auto;
-            max-width: fit-content;
-            box-shadow: none;
-            overflow-y: visible;
-            cursor: grab;
+        .modal-content h2 {
+            font-family: 'Anton', sans-serif;
+            color: var(--color-primary-yellow);
+            text-shadow: 2px 2px 0 var(--color-accent-red);
+            font-size: 2.5rem;
+            text-transform: uppercase;
         }
 
-        .enlarged-image {
-            max-width: 90vw;
-            max-height: 80vh; 
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            border-radius: 1rem;
-            box-shadow: 0 20px 50px var(--shadow-color);
-            border: 2px solid var(--card-border-color);
-            pointer-events: none;
+        .modal-content .btn-cinematic {
+            animation: fade-in-up 0.6s 0.3s forwards;
+            width: clamp(200px, 60vw, 300px);
         }
         
-        #confirm-restart-button:hover::before {
-             background: radial-gradient(circle, var(--color-accent-red) 0%, transparent 80%);
+        .modal-content.enlarged-image-container {
+            background-color: #111;
+            border: 4px solid var(--color-primary-yellow);
+            padding: 1rem;
+            box-shadow: 0 0 0 8px black, 0 10px 30px rgba(0, 0, 0, 0.7);
+            cursor: grab;
+            max-width: fit-content;
+        }
+        .modal-content.no-image {
+            background-color: var(--color-paper);
+            color: var(--color-paper-text);
+            border-color: #a18a5b;
+            box-shadow: 0 0 0 5px black, 0 0 0 8px #a18a5b;
+        }
+
+        .enlarged-image-wrapper {
+            max-width: 80vw;
+            max-height: 70vh;
+        }
+        
+        #enlarged-character-name {
+            font-family: 'Anton', sans-serif;
+            font-size: 2rem;
+            color: var(--color-primary-yellow);
+            text-shadow: 2px 2px 0 var(--color-accent-red);
+            margin-top: 1rem;
+        }
+
+        .no-image #enlarged-character-name {
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: var(--color-paper-text);
+            text-shadow: none;
+            margin: 0;
+        }
+        
+        #confirm-restart-button {
+            background-color: var(--color-accent-red);
+            color: var(--color-text-light);
         }
         #confirm-restart-button:hover {
-            box-shadow: 0 0 30px rgba(229, 0, 90, 0.4);
+            background-color: var(--color-shadow-red);
+            box-shadow: 6px 6px 0px black;
+        }
+        
+        #instructions-modal .modal-content {
+            background-color: var(--color-paper);
+            color: var(--color-paper-text);
+            border-color: #a18a5b;
+            box-shadow: 0 0 0 5px black, 0 0 0 8px #a18a5b;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        #instructions-modal .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        #instructions-modal .modal-content::-webkit-scrollbar-track {
+            background: #d1c5a9;
+        }
+        #instructions-modal .modal-content::-webkit-scrollbar-thumb {
+            background-color: #a18a5b;
+            border-radius: 4px;
         }
 
-        /* === INICIO: MODIFICACIÓN DEL EFECTO DE "TODAS VOLTEADAS" === */
-        .effect-all-flipped {
-            animation: sophisticated-pulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+        #instructions-modal h2 {
+            font-family: 'Anton', sans-serif;
+            font-size: 3rem;
+            color: var(--color-accent-red);
+            text-shadow: none;
+            text-align: center;
+            position: relative;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        #instructions-modal h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background-color: #a18a5b;
         }
 
-        @keyframes sophisticated-pulse {
-            0% { 
-                filter: brightness(1) sepia(0);
-                transform: scale(1); 
-            }
-            30% { 
-                filter: brightness(1.2) sepia(0.2); 
-                transform: scale(1.01);
-            }
-            60% { 
-                filter: brightness(1) sepia(0);
-                transform: scale(1); 
-            }
-            100% { 
-                filter: brightness(1) sepia(0);
-                transform: scale(1); 
-            }
+        #instructions-modal .rules-list {
+            list-style-type: none;
+            padding-left: 0;
+            counter-reset: rules-counter;
         }
-        /* === FIN: MODIFICACIÓN DEL EFECTO === */
+        #instructions-modal .rules-list li {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        #instructions-modal .rules-list li::before {
+            counter-increment: rules-counter;
+            content: counter(rules-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-family: 'Anton', sans-serif;
+            font-size: 2rem;
+            color: var(--color-accent-red);
+            width: 2.2rem;
+            height: 2.2rem;
+            line-height: 2.2rem;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #d1c5a9;
+            border: 2px solid #a18a5b;
+        }
+        #instructions-modal .rules-list li strong {
+            color: #111;
+        }
+
+        #instructions-modal .btn-cinematic {
+            background-color: var(--color-accent-red);
+            color: var(--color-text-light);
+        }
+        #instructions-modal .btn-cinematic:hover {
+            background-color: var(--color-shadow-red);
+        }
+        
+        #back-to-start {
+            width: clamp(150px, 40vw, 200px);
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            padding: 0.75rem 2.5rem;
+            background-color: var(--color-accent-red);
+            color: var(--color-text-light);
+            border: 3px solid var(--color-paper-text);
+            box-shadow: 4px 4px 0px black;
+            text-transform: uppercase;
+            transition: all 0.2s ease-out;
+            transform: scale(1);
+            cursor: pointer;
+            opacity: 0;
+            animation: fade-in-up 1s 1.3s forwards;
+        }
+
+        #back-to-start:hover {
+            background-color: var(--color-shadow-red);
+            transform: scale(1.05) translate(-2px, -2px);
+            box-shadow: 6px 6px 0px black;
+        }
+        
+        #back-to-start:active {
+            transform: scale(1) translate(4px, 4px);
+            box-shadow: 0px 0px 0px black;
+        }
+
+        /*
+        ==========================================================================
+        ESTILOS PARA LA VICTORIA CINEMÁTICA
+        ==========================================================================
+        */
+
+        #flash-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: white;
+            z-index: 201;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #flash-overlay.flash-active {
+            animation: camera-flash 0.4s ease-out forwards;
+        }
+
+        @keyframes camera-flash {
+            0% { opacity: 0; }
+            50% { opacity: 0.9; }
+            100% { opacity: 0; }
+        }
+
+        #win-stamp-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        #win-stamp-overlay.stamp-visible {
+            animation: stamp-animation 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s forwards;
+        }
+        
+        /* NUEVO: Clase y animación para la salida del sello */
+        #win-stamp-overlay.stamp-hiding {
+            animation: stamp-exit-animation 0.5s ease-in forwards;
+        }
+
+        @keyframes stamp-animation {
+            0%   { opacity: 0; transform: scale(3) rotate(-30deg); }
+            60%  { opacity: 0.85; transform: scale(0.9) rotate(-10deg); }
+            80%  { opacity: 0.8; transform: scale(1.1) rotate(-16deg); }
+            100% { opacity: 0.8; transform: scale(1) rotate(-15deg); }
+        }
+        
+        /* NUEVO: Keyframes para la animación de salida */
+        @keyframes stamp-exit-animation {
+            from { opacity: 0.8; transform: scale(1) rotate(-15deg); }
+            to   { opacity: 0; transform: scale(0.7) rotate(-20deg); }
+        }
+
+        #win-stamp-overlay span {
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(3rem, 15vw, 6rem);
+            color: var(--color-accent-red);
+            border: 8px solid var(--color-accent-red);
+            padding: 1rem 2rem;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
 
     </style>
 </head>
-<body class="overflow-hidden light-mode">
+<body>
+    
+    <!-- Capas de efectos cinemáticos -->
+    <div class="film-grain-overlay"></div>
+    <div class="vignette-overlay"></div>
+    <div id="top-letterbox" class="letterbox"></div>
+    <div id="bottom-letterbox" class="letterbox"></div>
+
+    <!-- Capas para el efecto de victoria -->
+    <div id="flash-overlay"></div>
+    <div id="win-stamp-overlay">
+        <span>Misión Concluida</span>
+    </div>
+
 
     <div class="main-container w-full min-h-screen relative">
 
         <!-- Pantalla de Inicio -->
         <div id="start-screen" class="screen is-active">
-            <div class="flex flex-col items-center justify-center space-y-8">
+            <div class="flex flex-col items-center justify-center space-y-12">
                 <h1 class="text-center">QESQ</h1>
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <button id="start-button" class="btn-modern">Iniciar Juego</button>
-                    <button id="how-to-play-button" class="btn-modern">Cómo Jugar</button>
+                <div class="flex flex-col sm:flex-row items-center gap-6">
+                    <button id="start-button" class="btn-cinematic">Jugar</button>
+                    <button id="how-to-play-button" class="btn-cinematic">Reglas</button>
                 </div>
             </div>
-            <div class="absolute bottom-12 w-full flex justify-center">
-                <button id="theme-toggle-button" class="btn-modern btn-theme" aria-label="Cambiar tema">
-                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                </button>
+        </div>
+        
+        <!-- Nueva Pantalla de Selección de Modo -->
+        <div id="mode-selection-screen" class="screen hidden">
+            <div class="flex flex-col items-center justify-center space-y-8">
+                <h2 class="text-center">Selecciona tu modo</h2>
+                <div class="flex flex-col items-center gap-4 mt-8">
+                    <button id="mode-characters" class="btn-cinematic btn-wide">Personajes</button>
+                    <button id="mode-cities" class="btn-cinematic btn-wide">Mundo</button>
+                    <button id="mode-foods" class="btn-cinematic btn-wide">Comidas</button>
+                    <button id="back-to-start" class="btn-cinematic">Volver</button>
+                </div>
             </div>
         </div>
 
-        <!-- Pantalla de Animación del Personaje -->
-        <div id="character-reveal-screen" class="screen hidden space-y-6 text-center">
-            <h2 class="">Tu personaje es...</h2>
-            <div class="revealed-card-container">
-                <div id="revealed-character-card">
+        <!-- Pantalla Revelación de Personaje -->
+        <div id="character-reveal-screen" class="screen hidden flex-col justify-center text-center p-4">
+            <h2 id="reveal-title">Expediente clasificado:</h2>
+            
+            <div class="dossier-container hidden">
+                <div class="dossier-cover">
+                    <h3>CONFIDENCIAL</h3>
+                </div>
+                <div class="dossier-content">
                     <div class="revealed-card-inner">
-                        <img id="revealed-character-img" src="" alt="Tu Personaje">
+                        <div id="revealed-image-container" class="character-image-container">
+                            <img id="revealed-character-img" src="" alt="Tu Secreto">
+                        </div>
+                        <p id="revealed-character-name"></p>
                     </div>
                 </div>
             </div>
-            <p id="revealed-character-name" class=""></p>
+
+            <div class="text-reveal-container hidden">
+                <h3>Transmisión Interceptada</h3>
+                <div id="revealed-text-content"></div>
+            </div>
         </div>
 
+
         <!-- Pantalla de Juego -->
-        <div id="game-screen" class="screen hidden py-10">
+        <div id="game-screen" class="screen hidden py-2">
             <header class="board-header">
                 <button id="restart-button" title="Reiniciar Juego">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
-                      <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
-                    </svg>
+                    <i class="fas fa-undo"></i>
                 </button>
                 <div class="flex items-center gap-4">
                     <div class="text-right">
-                        <p class="text-xs" style="color: var(--color-text-dark)">Tu personaje</p>
-                        <h3 id="your-character-name" class="text-md sm:text-lg font-semibold" style="color: var(--color-text-light);"></h3>
+                        <p class="text-sm uppercase tracking-widest">Tu Secreto</p>
+                        <h3 id="your-character-name" class="text-xl sm:text-2xl"></h3>
                     </div>
                     <div id="your-character" class="cursor-pointer">
-                        <img id="your-character-img" src="" alt="Tu Personaje Secreto" class="w-full h-full object-cover">
+                        <div id="your-image-container" class="character-image-container">
+                            <img id="your-character-img" src="" alt="Tu Secreto">
+                        </div>
                     </div>
                 </div>
             </header>
             
-            <div id="game-board" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
+            <div id="game-board" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-3">
                 <!-- Las cartas se generan dinámicamente -->
             </div>
         </div>
-
     </div>
 
-    <!-- Modal para agrandar la imagen -->
+    <!-- Modales -->
     <div id="enlarged-character-modal" class="modal-overlay hidden">
-        <div class="modal-content enlarged-image-container flex flex-col items-center gap-4">
-            <img id="enlarged-character-img" src="" alt="Personaje agrandado" class="enlarged-image">
-            <p id="enlarged-character-name" class="text-2xl font-bold" style="color: var(--color-text-light); text-shadow: 0 2px 4px var(--shadow-color);"></p>
+        <div class="modal-content enlarged-image-container flex flex-col items-center">
+            <div class="enlarged-image-wrapper">
+                <div id="enlarged-image-container" class="character-image-container">
+                    <img id="enlarged-character-img" src="" alt="Secreto agrandado">
+                </div>
+            </div>
+            <p id="enlarged-character-name"></p>
         </div>
     </div>
     
-    <!-- Modal para las Instrucciones -->
     <div id="instructions-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--color-text-light);">Cómo Jugar</h2>
-            <div class="space-y-4 text-lg" style="color: var(--color-text-dark);">
-                <p>El objetivo es descubrir el personaje secreto de tu oponente antes de que él descubra el tuyo.</p>
-                <p>Por turnos, haz preguntas de "sí" o "no" sobre las características de los personajes. Usa las respuestas para descartar opciones en tu tablero haciendo clic en ellas.</p>
-                <p>Por ejemplo: "¿Tu personaje usa gorro?". Si la respuesta es "sí", descartas a todos los que no lo usan.</p>
-                <p>¡El primero en adivinar correctamente el personaje del rival, gana!</p>
+            <h2>REGLAMENTO</h2>
+            <div class="text-lg">
+                <p class="mb-6 text-center italic">Documento clasificado. Solo para agentes.</p>
+                <ol class="rules-list">
+                    <li>
+                        <strong>El Objetivo:</strong> Tu misión es simple, agente. Descubrí la identidad del personaje secreto de tu oponente antes de que él descubra la tuya.
+                    </li>
+                    <li>
+                        <strong>El Interrogatorio:</strong> En tu turno, realicá una pregunta clave sobre las características de los sospechosos. La respuesta solo puede ser "sí" o "no".
+                    </li>
+                    <li>
+                        <strong>El Descarte:</strong> Usá la información obtenida para eliminar sospechosos de tu tablero. Si te dicen "¿Tu personaje usa gorro? - SÍ", hacé clic en todos los que NO lo usan para descartarlos.
+                    </li>
+                     <li>
+                        <strong>La Acusación:</strong> Cuando creas saber quién es, usá tu turno para acusar. Pero cuidado, si fallás, ¡perdés la partida! El primero en adivinar correctamente, gana.
+                    </li>
+                </ol>
             </div>
             <div class="flex justify-center mt-8">
-                <button id="close-instructions-button" class="btn-modern">Entendido</button>
+                <button id="close-instructions-button" class="btn-cinematic">Entendido</button>
             </div>
         </div>
     </div>
     
     <div id="restart-confirm-modal" class="modal-overlay hidden">
         <div class="modal-content text-center">
-            <h2 class="text-2xl font-bold mb-4" style="color: var(--color-text-light);">¿Reiniciar el juego?</h2>
-            <p class="text-lg mb-8" style="color: var(--color-text-dark);">
-                Si continúas, volverás a la pantalla de inicio y perderás tu personaje actual.
+            <h2 class="mb-4">¿Empezar de nuevo?</h2>
+            <p class="text-lg mb-8">
+                Vas a perder a tu personaje y volver al inicio. ¿Estás seguro?
             </p>
             <div class="flex justify-center gap-4">
-                <button id="cancel-restart-button" class="btn-modern">Cancelar</button>
-                <button id="confirm-restart-button" class="btn-modern">Reiniciar</button>
+                <button id="cancel-restart-button" class="btn-cinematic">Cancelar</button>
+                <button id="confirm-restart-button" class="btn-cinematic">Reiniciar</button>
             </div>
         </div>
     </div>
 
-    <canvas id="confetti-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-[200]"></canvas>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            
+            const gameData = {
+                characters: [
+                    { name: "Renata", imgUrl: "https://i.imgur.com/f8gRf26.png" }, { name: "Hugo", imgUrl: "https://i.imgur.com/o61ttUd.png" },
+                    { name: "Florencio", imgUrl: "https://i.imgur.com/kToYUyO.png" }, { name: "Mirtha", imgUrl: "https://i.imgur.com/Yx9HpwM.png" },
+                    { name: "Bautista", imgUrl: "https://i.imgur.com/rhlMOpw.png" }, { name: "Valentina", imgUrl: "https://i.imgur.com/Ery2KqM.png" },
+                    { name: "Tiago", imgUrl: "https://i.imgur.com/B93Z0Wx.png" }, { name: "Rosina", imgUrl: "https://i.imgur.com/Kcmi5SA.png" },
+                    { name: "Claudio", imgUrl: "https://i.imgur.com/xN8yCVY.png" }, { name: "Julia", imgUrl: "https://i.imgur.com/nu7Q0rE.png" },
+                    { name: "Fernanda", imgUrl: "https://i.imgur.com/sx46oPW.png" }, { name: "Francisco", imgUrl: "https://i.imgur.com/8v7nbch.png" },
+                    { name: "Alex", imgUrl: "https://i.imgur.com/cPHEruJ.png" }, { name: "Micaela", imgUrl: "https://i.imgur.com/pGtnB0X.png" },
+                    { name: "Pedro", imgUrl: "https://i.imgur.com/hqJ9KIF.png" }, { name: "Martín", imgUrl: "https://i.imgur.com/2jsnfpG.png" },
+                    { name: "Rosa", imgUrl: "https://i.imgur.com/KyHmOrb.png" }, { name: "Raul", imgUrl: "https://i.imgur.com/kLbw0sC.png" },
+                    { name: "Sofía", imgUrl: "https://i.imgur.com/hpEd1N8.png" }, { name: "Macarena", imgUrl: "https://i.imgur.com/AztpmjA.png" },
+                    { name: "Fabián", imgUrl: "https://i.imgur.com/HhFyDrw.png" }, { name: "Catalina", imgUrl: "https://i.imgur.com/5pYKrOr.png" },
+                    { name: "Juan", imgUrl: "https://i.imgur.com/7Ila1Gq.png" }, { name: "Sol", imgUrl: "https://i.imgur.com/2XQJQ8k.jpeg" }
+                ],
+                cities: [
+                    { name: "Buenos Aires" }, { name: "París" }, { name: "Nueva York" }, { name: "Río de Janeiro" }, { name: "Ciudad de México" }, { name: "Miami" },
+                    { name: "Perú" }, { name: "Barcelona" }, { name: "Irán" }, { name: "Roma" }, { name: "Tokio" }, { name: "Rusia" },
+                    { name: "África" }, { name: "Londres" }, { name: "Alemania" }, { name: "Australia" }, { name: "Chile" }, { name: "China" },
+                    { name: "Dubái" }, { name: "Uruguay" }, { name: "Turquía" }, { name: "India" }, { name: "Cuba" }, { name: "Antártida" }
+                ],
+                foods: [
+                    { name: "Pizza" }, { name: "Empanadas" }, { name: "Milanesa" }, { name: "Café" }, { name: "Hamburguesa" }, { name: "Sushi" },
+                    { name: "Licuado de frutas" }, { name: "Papas fritas" }, { name: "Helado" }, { name: "Alfajor" }, { name: "Torta de chocolate" }, { name: "Galletitas" },
+                    { name: "Facturas" }, { name: "Asado" }, { name: "Agua" }, { name: "Ensalada de frutas" }, { name: "Sandía" }, { name: "Banana" },
+                    { name: "Manzana" }, { name: "Gomitas" }, { name: "Pescado" }, { name: "Ketchup" }, { name: "Mayonesa" }, { name: "Jugo de naranja" }
+                ]
+            };
 
-            // =========================================================================
-            //  BASE DE DATOS DE PERSONAJES
-            // =========================================================================
-            const characters = [
-                { name: "Renata", imgUrl: "https://i.imgur.com/f8gRf26.png" },
-                { name: "Hugo", imgUrl: "https://i.imgur.com/o61ttUd.png" },
-                { name: "Florencio", imgUrl: "https://i.imgur.com/kToYUyO.png" },
-                { name: "Mirtha", imgUrl: "https://i.imgur.com/Yx9HpwM.png" },
-                { name: "Bautista", imgUrl: "https://i.imgur.com/rhlMOpw.png" },
-                { name: "Valentina", imgUrl: "https://i.imgur.com/Ery2KqM.png" },
-                { name: "Tiago", imgUrl: "https://i.imgur.com/B93Z0Wx.png" },
-                { name: "Rosina", imgUrl: "https://i.imgur.com/Kcmi5SA.png" },
-                { name: "Claudio", imgUrl: "https://i.imgur.com/xN8yCVY.png" },
-                { name: "Julia", imgUrl: "https://i.imgur.com/nu7Q0rE.png" },
-                { name: "Fernanda", imgUrl: "https://i.imgur.com/sx46oPW.png" },
-                { name: "Francisco", imgUrl: "https://i.imgur.com/8v7nbch.png" },
-                { name: "Alex", imgUrl: "https://i.imgur.com/cPHEruJ.png" },
-                { name: "Micaela", imgUrl: "https://i.imgur.com/pGtnB0X.png" },
-                { name: "Pedro", imgUrl: "https://i.imgur.com/hqJ9KIF.png" },
-                { name: "Martín", imgUrl: "https://i.imgur.com/2jsnfpG.png" },
-                { name: "Rosa", imgUrl: "https://i.imgur.com/KyHmOrb.png" },
-                { name: "Raul", imgUrl: "https://i.imgur.com/kLbw0sC.png" },
-                { name: "Sofía", imgUrl: "https://i.imgur.com/hpEd1N8.png" },
-                { name: "Macarena", imgUrl: "https://i.imgur.com/AztpmjA.png" },
-                { name: "Fabián", imgUrl: "https://i.imgur.com/HhFyDrw.png" },
-                { name: "Catalina", imgUrl: "https://i.imgur.com/5pYKrOr.png" },
-                { name: "Juan", imgUrl: "https://i.imgur.com/7Ila1Gq.png" },
-                { name: "Sol", imgUrl: "https://i.imgur.com/2XQJQ8k.jpeg" }
-            ];
-
-            // =========================================================================
-            //  REFERENCIAS A ELEMENTOS DEL DOM
-            // =========================================================================
             const body = document.body;
             const mainContainer = document.querySelector('.main-container');
+            const startScreen = document.getElementById('start-screen');
             const startButton = document.getElementById('start-button');
+            const modeSelectionScreen = document.getElementById('mode-selection-screen');
+            const modeCharactersButton = document.getElementById('mode-characters');
+            const modeCitiesButton = document.getElementById('mode-cities');
+            const modeFoodsButton = document.getElementById('mode-foods');
+            const backToStartButton = document.getElementById('back-to-start');
             const restartButton = document.getElementById('restart-button');
             const gameBoard = document.getElementById('game-board');
-            const enlargedCharacterModal = document.getElementById('enlarged-character-modal');
-            const enlargedCharacterImg = document.getElementById('enlarged-character-img');
-            const enlargedCharacterName = document.getElementById('enlarged-character-name'); 
             const howToPlayButton = document.getElementById('how-to-play-button');
             const instructionsModal = document.getElementById('instructions-modal');
             const closeInstructionsButton = document.getElementById('close-instructions-button');
-            const themeToggleButton = document.getElementById('theme-toggle-button');
-            const sunIcon = document.getElementById('sun-icon');
-            const moonIcon = document.getElementById('moon-icon');
             const restartConfirmModal = document.getElementById('restart-confirm-modal');
             const cancelRestartButton = document.getElementById('cancel-restart-button');
             const confirmRestartButton = document.getElementById('confirm-restart-button');
-            const confettiCanvas = document.getElementById('confetti-canvas');
             
-            // =========================================================================
-            //  ESTADO DEL JUEGO
-            // =========================================================================
+            const enlargedCharacterModal = document.getElementById('enlarged-character-modal');
+            const enlargedImageContainer = enlargedCharacterModal.querySelector('.modal-content');
+            const enlargedCharacterImg = document.getElementById('enlarged-character-img');
+            const enlargedCharacterName = document.getElementById('enlarged-character-name');
+            const yourCharacterContainer = document.getElementById('your-character');
+            
+            const revealTitle = document.getElementById('reveal-title');
+            const dossierContainer = document.querySelector('.dossier-container');
+            const revealedCharacterName = document.getElementById('revealed-character-name');
+            const revealedCharacterImg = document.getElementById('revealed-character-img');
+            const textRevealContainer = document.querySelector('.text-reveal-container');
+            const revealedTextContent = document.getElementById('revealed-text-content');
+
+            const flashOverlay = document.getElementById('flash-overlay');
+            const winStampOverlay = document.getElementById('win-stamp-overlay');
+
+            function hapticFeedback(pattern) {
+                if ('vibrate' in navigator) {
+                    try {
+                        navigator.vibrate(pattern);
+                    } catch (e) {
+                        console.log("No se pudo vibrar.", e);
+                    }
+                }
+            }
+            
             let yourSecretCharacter = null;
             let shuffledCharacters = [];
+            let currentMode = null;
+            let audioInitialized = false;
+            let winEffectTimeout = null; 
 
-            // === INICIO: VARIABLES PARA EL EASTER EGG ===
-            let isEggActive = false;
-            let lastCardClicked = null;
-            let cardClickCount = 0;
-            let lastClickTimestamp = 0; 
-            // === FIN: VARIABLES PARA EL EASTER EGG ===
+            let sounds;
+            let flickerSynth; 
+            function setupSounds() {
+                const reverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.01, wet: 0.3 }).toDestination();
+                const lowpass = new Tone.Filter(8000, "lowpass").connect(reverb);
+                const mainVolume = new Tone.Volume(-6).connect(lowpass); 
+                
+                flickerSynth = new Tone.NoiseSynth({
+                    noise: { type: 'pink' }, volume: -30,
+                    envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 }
+                }).connect(mainVolume);
+
+                sounds = {
+                    uiHover: new Tone.Synth({ oscillator: { type: 'sine' }, volume: -22, envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 } }).connect(mainVolume),
+                    uiClick: new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, oscillator: { type: 'sine' }, volume: -10, envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.1 } }).connect(mainVolume),
+                    characterReveal: new Tone.PolySynth(Tone.DuoSynth, {
+                        volume: -8, harmonicity: 1.2, vibratoAmount: 0.1,
+                        voice0: { oscillator: { type: "sine" }, envelope: { attack: 0.4, decay: 1.2, sustain: 0.5, release: 2 } },
+                        voice1: { oscillator: { type: "triangle" }, envelope: { attack: 0.6, decay: 1, sustain: 0.4, release: 2 } }
+                    }).connect(mainVolume),
+                    viewCharacter: new Tone.MembraneSynth({ pitchDecay: 0.1, octaves: 1.5, oscillator: { type: 'sine' }, volume: -12, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } }).connect(mainVolume),
+                    cardFlip: new Tone.NoiseSynth({
+                        noise: { type: 'white' }, volume: -18,
+                        envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.1 }
+                    }).connect(mainVolume),
+                    stampSlam: new Tone.MembraneSynth({
+                        pitchDecay: 0.08, octaves: 4, oscillator: { type: 'sine' }, volume: -2,
+                        envelope: { attack: 0.001, decay: 0.3, sustain: 0.01, release: 0.2 }
+                    }).connect(mainVolume)
+                };
+            }
             
+            async function initAudio() {
+                if (audioInitialized) return;
+                try {
+                    await Tone.start();
+                    setupSounds();
+                    audioInitialized = true;
+                    console.log("Audio context iniciado.");
+                } catch(e) {
+                    console.error("No se pudo iniciar el audio:", e);
+                }
+            }
+            
+            function playSound(soundKey, note, time) {
+                if (!audioInitialized || !sounds[soundKey]) return;
+                try {
+                    if (typeof sounds[soundKey].triggerAttackRelease === 'function' && note) {
+                        sounds[soundKey].triggerAttackRelease(note, '8n', time);
+                    } else if (typeof sounds[soundKey].triggerAttack === 'function') {
+                        sounds[soundKey].triggerAttack(time);
+                    }
+                } catch(e) {
+                    console.error(`Error al reproducir sonido ${soundKey}:`, e);
+                }
+            }
+
+            function startFlickerSound() {
+                if (!audioInitialized) return;
+                const triggerFlicker = () => {
+                    const randomDelay = 1500 + Math.random() * 4000;
+                    setTimeout(() => {
+                        flickerSynth.triggerAttackRelease("16n", Tone.now());
+                        setTimeout(() => flickerSynth.triggerAttackRelease("16n", Tone.now() + 0.1), 100);
+                        if (startScreen.classList.contains('is-active')) {
+                           triggerFlicker();
+                        }
+                    }, randomDelay);
+                };
+                triggerFlicker();
+            }
+
+            let isEggActive = false, lastCardClicked = null, cardClickCount = 0;
+            let lastClickTimestamp = 0, isDragging = false, hasDragged = false;
+            let startX = 0, startY = 0;
+            
+            function cinematicIntro() {
+                body.classList.add('cinematic-intro');
+                body.classList.add('overflow-hidden');
+            }
+            function retractLetterbox() {
+                body.classList.remove('cinematic-intro');
+            }
+            cinematicIntro(); 
+
             function switchScreen(toScreenId) {
                 const toScreen = document.getElementById(toScreenId);
                 const fromScreen = document.querySelector('.screen.is-active');
 
-                body.classList.add('overflow-hidden');
+                body.classList.toggle('allow-scroll', toScreenId === 'game-screen');
 
                 if (fromScreen && fromScreen !== toScreen) {
+                    fromScreen.classList.add('is-fading-out');
                     fromScreen.classList.remove('is-active');
 
                     setTimeout(() => {
                         fromScreen.classList.add('hidden');
-                        
+                        fromScreen.classList.remove('is-fading-out');
                         toScreen.classList.remove('hidden');
-                        
-                        requestAnimationFrame(() => {
-                            toScreen.classList.add('is-active');
-                        });
-
-                    }, 300);
+                        requestAnimationFrame(() => toScreen.classList.add('is-active'));
+                    }, 400); 
                 } else if (!fromScreen) {
                     toScreen.classList.remove('hidden');
                     toScreen.classList.add('is-active');
                 }
             }
-
-
-            // =========================================================================
-            //  FUNCIONES PRINCIPALES DEL JUEGO
-            // =========================================================================
             
             function shuffleArray(array) {
                 for (let i = array.length - 1; i > 0; i--) {
@@ -837,259 +1317,169 @@
                     [array[i], array[j]] = [array[j], array[i]];
                 }
             }
+
+            function initGame(mode) {
+                currentMode = mode;
+                const dataArray = gameData[mode];
+                shuffledCharacters = [...dataArray]; 
+                shuffleArray(shuffledCharacters);
+                yourSecretCharacter = dataArray[Math.floor(Math.random() * dataArray.length)];
+                
+                switchScreen('character-reveal-screen');
+                
+                const hasImage = !!yourSecretCharacter.imgUrl;
+                
+                if (hasImage) {
+                    revealTitle.textContent = 'Expediente clasificado:';
+                    dossierContainer.classList.remove('hidden');
+                    textRevealContainer.classList.add('hidden');
+                    
+                    revealedCharacterImg.src = yourSecretCharacter.imgUrl;
+                    revealedCharacterName.textContent = yourSecretCharacter.name;
+
+                    setTimeout(() => {
+                        playSound('characterReveal', ['C3', 'G3', 'D#4'], '+0.1');
+                        hapticFeedback([100, 40, 150]);
+                    }, 3600);
+                    setTimeout(showGameScreen, 5500);
+
+                } else {
+                    revealTitle.textContent = 'Objetivo Asignado:';
+                    dossierContainer.classList.add('hidden');
+                    textRevealContainer.classList.remove('hidden');
+                    
+                    revealedTextContent.textContent = yourSecretCharacter.name;
+                    revealedTextContent.style.setProperty('--char-count', yourSecretCharacter.name.length);
+
+                    setTimeout(() => {
+                        playSound('characterReveal', ['A2', 'E3'], '+0.1');
+                        hapticFeedback([80, 50, 80]);
+                    }, 2200);
+                    setTimeout(showGameScreen, 5000);
+                }
+            }
             
-            // =========================================================================
-            // INICIO: MODIFICACIÓN DE LA FUNCIÓN createBoard
-            // =========================================================================
             function createBoard() {
                 gameBoard.innerHTML = ''; 
+                const hasImages = !!gameData[currentMode][0].imgUrl;
 
-                const cardsHTML = shuffledCharacters.map((character, index) => `
-                    <div class="card-item w-full aspect-[4/5] cursor-pointer group" data-index="${index}">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <img src="${character.imgUrl}" alt="${character.name}" class="w-full h-full object-cover rounded-md" draggable="false">
-                                <div class="card-name-overlay absolute bottom-0 left-0 right-0 p-2 text-center">
-                                    <p class="font-semibold text-sm truncate">${character.name}</p>
-                                </div>
-                            </div>
-                            <div class="card-back">
-                                <span>QESQ</span>
+                const cardsHTML = shuffledCharacters.map((item, index) => {
+                    const cardFrontContent = hasImages ? `
+                        <div class="character-image-container">
+                            <img src="${item.imgUrl}" alt="${item.name}" draggable="false">
+                        </div>
+                        <div class="card-name-overlay"><p>${item.name}</p></div>
+                    ` : `
+                        <div class="card-name-overlay"><p>${item.name}</p></div>
+                    `;
+                    const cardFrontClass = hasImages ? 'card-front' : 'card-front no-image';
+                    return `
+                        <div class="card-item w-full aspect-[4/5] cursor-pointer group" data-index="${index}">
+                            <div class="card-inner">
+                                <div class="${cardFrontClass}">${cardFrontContent}</div>
+                                <div class="card-back"><span>QESQ</span></div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 gameBoard.innerHTML = cardsHTML;
-
-                // --- NUEVA LÓGICA PARA LA ANIMACIÓN DE ONDA EXPANSIVA ---
+                
                 const cards = gameBoard.querySelectorAll('.card-item');
-
-                // Usamos requestAnimationFrame para asegurar que el DOM está actualizado
-                // y podemos obtener las dimensiones correctas de los elementos.
                 requestAnimationFrame(() => {
                     const boardRect = gameBoard.getBoundingClientRect();
                     const boardCenterX = boardRect.width / 2;
                     const boardCenterY = boardRect.height / 2;
-
-                    // Calculamos la distancia máxima (del centro a una esquina) para normalizar los retardos.
                     const maxDist = Math.sqrt(boardCenterX**2 + boardCenterY**2);
-
                     cards.forEach(card => {
+                        card.addEventListener('mouseenter', () => playSound('uiHover', 'C5'));
                         const cardRect = card.getBoundingClientRect();
-                        // Calculamos el centro de la tarjeta relativo al tablero.
                         const cardCenterX = cardRect.left - boardRect.left + cardRect.width / 2;
                         const cardCenterY = cardRect.top - boardRect.top + cardRect.height / 2;
-                        
-                        // Calculamos la distancia de la tarjeta al centro del tablero.
                         const dist = Math.sqrt((cardCenterX - boardCenterX)**2 + (cardCenterY - boardCenterY)**2);
-                        
-                        // Normalizamos la distancia (valor entre 0 y 1) y la escalamos para el retardo.
-                        // Un retardo máximo de 350ms crea un efecto rápido pero suave.
-                        const delay = (dist / maxDist) * 350; 
-
+                        const delay = (dist / maxDist) * 400; 
                         card.style.animationDelay = `${delay}ms`;
                         card.classList.add('is-entering');
                     });
                 });
             }
-            // =========================================================================
-            // FIN: MODIFICACIÓN DE LA FUNCIÓN createBoard
-            // =========================================================================
 
-            function handleGameStart() {
-                shuffledCharacters = [...characters]; 
-                shuffleArray(shuffledCharacters);
-
-                yourSecretCharacter = characters[Math.floor(Math.random() * characters.length)];
-                switchScreen('character-reveal-screen');
-                const revealedCharacterImg = document.getElementById('revealed-character-img');
-                const revealedCharacterName = document.getElementById('revealed-character-name');
-                revealedCharacterImg.src = yourSecretCharacter.imgUrl;
-                revealedCharacterImg.alt = `Tu Personaje: ${yourSecretCharacter.name}`;
-                revealedCharacterName.textContent = yourSecretCharacter.name;
-                setTimeout(() => {
-                    showGameScreen();
-                }, 4000);
-            }
-            
             function showGameScreen() {
                 switchScreen('game-screen');
-                body.classList.remove('overflow-hidden');
-                const yourCharacterImg = document.getElementById('your-character-img');
                 const yourCharacterName = document.getElementById('your-character-name');
-                yourCharacterImg.src = yourSecretCharacter.imgUrl;
-                yourCharacterImg.alt = `Tu Personaje Secreto: ${yourSecretCharacter.name}`;
+                const yourCharacterImg = document.getElementById('your-character-img');
+                
+                const hasImage = !!yourSecretCharacter.imgUrl;
+                
+                if (hasImage) {
+                    yourCharacterImg.src = yourSecretCharacter.imgUrl;
+                    yourCharacterImg.alt = `Tu Secreto: ${yourSecretCharacter.name}`;
+                    yourCharacterContainer.classList.remove('hidden');
+                } else {
+                    yourCharacterContainer.classList.add('hidden');
+                }
+
                 yourCharacterName.textContent = yourSecretCharacter.name;
+                gameBoard.dataset.mode = currentMode;
                 createBoard();
             }
 
+            // MODIFICACIÓN: Función de salida del efecto mejorada
+            function hideWinEffect() {
+                if (!winStampOverlay.classList.contains('stamp-visible')) return;
+
+                mainContainer.classList.remove('win-effect-filter');
+                winStampOverlay.classList.add('stamp-hiding');
+
+                winStampOverlay.onanimationend = () => {
+                    winStampOverlay.classList.remove('stamp-visible');
+                    winStampOverlay.classList.remove('stamp-hiding');
+                    winStampOverlay.onanimationend = null;
+                };
+
+                if (winEffectTimeout) {
+                    clearTimeout(winEffectTimeout);
+                    winEffectTimeout = null;
+                }
+            }
+
             function restartGame() {
+                playSound('uiClick', 'C3');
+                cinematicIntro();
+                hideWinEffect();
                 switchScreen('start-screen');
             }
 
-            function triggerEasterEggEffect() {
-                if (isEggActive) return;
-                isEggActive = true;
-
-                const cards = Array.from(gameBoard.querySelectorAll('.card-item'));
-                const originalStates = cards.map(card => ({
-                    element: card,
-                    isFlipped: card.classList.contains('is-flipped')
-                }));
-
-                const goCrazy = () => {
-                    cards.forEach(card => {
-                        const randX = (Math.random() - 0.5) * 50;
-                        const randY = (Math.random() - 0.5) * 50;
-                        const randRotate = (Math.random() - 0.5) * 30;
-                        
-                        card.classList.add('easter-egg-active');
-                        card.style.transform = `translate(${randX}px, ${randY}px) rotate(${randRotate}deg)`;
-
-                        if (Math.random() > 0.6) {
-                            card.classList.toggle('is-flipped');
-                        }
-                    });
-                };
-
-                const crazyInterval = setInterval(goCrazy, 200);
-
-                setTimeout(() => {
-                    clearInterval(crazyInterval);
-
-                    originalStates.forEach(state => {
-                        const { element, isFlipped } = state;
-                        element.style.transform = '';
-                        element.classList.remove('easter-egg-active');
-                        
-                        if (isFlipped) {
-                            element.classList.add('is-flipped');
-                        } else {
-                            element.classList.remove('is-flipped');
-                        }
-                    });
-
-                    isEggActive = false;
-                }, 2500);
-            }
-            
-            const ctx = confettiCanvas.getContext('2d');
-            let particles = [];
-
-            function checkAllFlipped(lastFlippedCard) {
+            function checkAllFlipped() {
                 if (isEggActive) return;
                 const allCards = gameBoard.querySelectorAll('.card-item');
                 const flippedCards = gameBoard.querySelectorAll('.card-item.is-flipped');
 
                 if (allCards.length > 0 && flippedCards.length === allCards.length) {
-                    mainContainer.classList.remove('effect-all-flipped');
-                    void mainContainer.offsetWidth; 
-                    mainContainer.classList.add('effect-all-flipped');
+                    if (winEffectTimeout) clearTimeout(winEffectTimeout);
 
-                    const rect = lastFlippedCard.getBoundingClientRect();
-                    createParticlesFromCard(rect);
+                    hapticFeedback([100, 50, 200]);
+                    flashOverlay.classList.add('flash-active');
+                    flashOverlay.onanimationend = () => {
+                        flashOverlay.classList.remove('flash-active');
+                    };
+
+                    setTimeout(() => {
+                        playSound('stampSlam', 'C2');
+                        mainContainer.classList.add('win-effect-filter');
+                        winStampOverlay.classList.add('stamp-visible');
+                    }, 150);
+                    
+                    winEffectTimeout = setTimeout(hideWinEffect, 4000);
                 }
             }
             
-            function createParticlesFromCard(rect) {
-                confettiCanvas.width = window.innerWidth;
-                confettiCanvas.height = window.innerHeight;
-                particles = [];
-                const particleCount = 60; 
-                const confettiColors = ['#6c757d', '#adb5bd', '#ff4d00', '#e67e22', '#ff8c00', '#e5005a', '#c0392b'];
-
-                for (let i = 0; i < particleCount; i++) {
-                    const side = Math.floor(Math.random() * 4);
-                    let pos = { x: 0, y: 0 };
-                    let vel = { x: 0, y: 0 };
-
-                    switch(side) {
-                        case 0: // Top
-                            pos.x = rect.left + Math.random() * rect.width;
-                            pos.y = rect.top;
-                            vel.x = (Math.random() - 0.5) * 6;
-                            vel.y = -Math.random() * 5 - 2;
-                            break;
-                        case 1: // Right
-                            pos.x = rect.right;
-                            pos.y = rect.top + Math.random() * rect.height;
-                            vel.x = Math.random() * 5 + 2;
-                            vel.y = (Math.random() - 0.5) * 6;
-                            break;
-                        case 2: // Bottom
-                            pos.x = rect.left + Math.random() * rect.width;
-                            pos.y = rect.bottom;
-                            vel.x = (Math.random() - 0.5) * 6;
-                            vel.y = Math.random() * 5 + 2;
-                            break;
-                        case 3: // Left
-                            pos.x = rect.left;
-                            pos.y = rect.top + Math.random() * rect.height;
-                            vel.x = -Math.random() * 5 - 2;
-                            vel.y = (Math.random() - 0.5) * 6;
-                            break;
-                    }
-
-                    particles.push({
-                        x: pos.x,
-                        y: pos.y,
-                        vx: vel.x,
-                        vy: vel.y,
-                        width: Math.random() * 6 + 4,
-                        height: Math.random() * 10 + 6,
-                        color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-                        alpha: 1,
-                        rotation: Math.random() * Math.PI * 2,
-                        rotationSpeed: (Math.random() - 0.5) * 0.2
-                    });
-                }
-                
-                requestAnimationFrame(animateParticles);
-            }
-            
-            function animateParticles() {
-                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-
-                for (let i = 0; i < particles.length; i++) {
-                    const p = particles[i];
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += 0.12;
-                    p.alpha -= 0.01;
-                    p.rotation += p.rotationSpeed;
-
-                    if (p.alpha <= 0) continue;
-
-                    ctx.save();
-                    ctx.globalAlpha = p.alpha;
-                    ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
-                    ctx.rotate(p.rotation);
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
-                    ctx.restore();
-                }
-                
-                particles = particles.filter(p => p.alpha > 0);
-                
-                if (particles.length > 0) {
-                    requestAnimationFrame(animateParticles);
-                } else {
-                    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                }
-            }
-
-            // =========================================================================
-            //  MANEJO DE MODALES Y LÓGICA DE DESLIZAR
-            // =========================================================================
-            
-            const enlargedImageContainer = enlargedCharacterModal.querySelector('.modal-content');
-            let isDragging = false, hasDragged = false;
-            let startX = 0, startY = 0;
-
             function showModal(modalElement) {
+                hideWinEffect();
                 modalElement.classList.remove('hidden');
                 setTimeout(() => modalElement.classList.add('is-visible'), 10);
+                playSound('uiClick', 'A4');
+                hapticFeedback(35);
             }
             
             function hideModal(modalElement) {
@@ -1102,15 +1492,67 @@
                         enlargedImageContainer.style.opacity = '';
                     }
                 }, 400);
+                playSound('uiClick', 'F4');
+                hapticFeedback(20);
             }
 
-            function showImageModal(imgSrc, name) {
-                enlargedCharacterImg.src = imgSrc;
-                enlargedCharacterName.textContent = name;
+            function showImageModal(item) {
+                playSound('viewCharacter', 'C2');
+                hapticFeedback(70); 
+                
+                const hasImage = !!item.imgUrl;
+                enlargedCharacterModal.classList.toggle('no-image', !hasImage);
+                enlargedImageContainer.classList.toggle('no-image', !hasImage);
+                
+                if (hasImage) {
+                    enlargedCharacterImg.src = item.imgUrl;
+                    enlargedCharacterImg.alt = item.name;
+                    document.getElementById('enlarged-image-container').classList.remove('hidden');
+                } else {
+                    document.getElementById('enlarged-image-container').classList.add('hidden');
+                }
+
+                enlargedCharacterName.textContent = item.name;
                 enlargedImageContainer.style.transition = 'none';
                 enlargedImageContainer.style.transform = '';
                 enlargedImageContainer.style.opacity = '';
                 showModal(enlargedCharacterModal);
+            }
+
+            function triggerEasterEggEffect() {
+                if (isEggActive) return;
+                isEggActive = true;
+                hapticFeedback([10, 40, 10, 40, 10, 40, 10, 40, 10, 40]);
+
+                const cards = Array.from(gameBoard.querySelectorAll('.card-item'));
+                const originalStates = cards.map(card => ({
+                    element: card,
+                    isFlipped: card.classList.contains('is-flipped')
+                }));
+                
+                const goCrazy = () => {
+                    playSound('cardFlip'); 
+                    cards.forEach(card => {
+                        const randX = (Math.random() - 0.5) * 50;
+                        const randY = (Math.random() - 0.5) * 50;
+                        const randRotate = (Math.random() - 0.5) * 30;
+                        card.classList.add('easter-egg-active');
+                        card.style.transform = `translate(${randX}px, ${randY}px) rotate(${randRotate}deg)`;
+                        if (Math.random() > 0.6) card.classList.toggle('is-flipped');
+                    });
+                };
+                const crazyInterval = setInterval(goCrazy, 150);
+                setTimeout(() => {
+                    clearInterval(crazyInterval);
+                    originalStates.forEach(state => {
+                        const { element, isFlipped } = state;
+                        element.style.transform = '';
+                        element.classList.remove('easter-egg-active');
+                        if (isFlipped) element.classList.add('is-flipped');
+                        else element.classList.remove('is-flipped');
+                    });
+                    isEggActive = false;
+                }, 2500);
             }
             
             const dragStart = (e) => {
@@ -1122,43 +1564,36 @@
                 enlargedImageContainer.style.transition = 'none';
                 enlargedImageContainer.style.cursor = 'grabbing';
             };
-
             const dragMove = (e) => {
                 if (!isDragging) return;
                 const currentX = e.pageX || e.touches[0].pageX;
                 const currentY = e.pageY || e.touches[0].pageY;
                 const deltaX = currentX - startX;
                 const deltaY = currentY - startY;
-                if (!hasDragged && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) {
-                   hasDragged = true;
-                }
+                if (!hasDragged && (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5)) hasDragged = true;
                 if (hasDragged) {
                     e.preventDefault();
                     const rotation = deltaX * 0.1;
                     enlargedImageContainer.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
                 }
             };
-
             const dragEnd = (e) => {
                 if (!isDragging) return;
                 isDragging = false;
                 enlargedImageContainer.style.cursor = 'grab';
-                
                 if (hasDragged) {
                     const currentX = e.pageX || e.changedTouches[0].pageX;
                     const currentY = e.pageY || e.changedTouches[0].pageY;
                     const deltaX = currentX - startX;
                     const deltaY = currentY - startY;
-                    const swipeThreshold = 30; 
+                    const swipeThreshold = 50; 
                     enlargedImageContainer.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
                     if (Math.abs(deltaX) > swipeThreshold || Math.abs(deltaY) > swipeThreshold) {
                         let endX, endY;
                         if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                            endX = deltaX > 0 ? window.innerWidth : -window.innerWidth;
-                            endY = deltaY;
+                            endX = deltaX > 0 ? window.innerWidth : -window.innerWidth; endY = deltaY;
                         } else {
-                            endY = deltaY > 0 ? window.innerHeight : -window.innerHeight;
-                            endX = deltaX;
+                            endY = deltaY > 0 ? window.innerHeight : -window.innerHeight; endX = deltaX;
                         }
                         enlargedImageContainer.style.transform = `translate(${endX}px, ${endY}px) rotate(${deltaX * 0.2}deg)`;
                         enlargedImageContainer.style.opacity = '0';
@@ -1169,135 +1604,87 @@
                 }
             };
 
-            // =========================================================================
-            //  MANEJO DEL TEMA (CLARO/OSCURO)
-            // =========================================================================
-            function applyTheme(theme) {
-                if (theme === 'dark') {
-                    body.classList.remove('light-mode');
-                    moonIcon.classList.remove('hidden');
-                    sunIcon.classList.add('hidden');
-                } else {
-                    body.classList.add('light-mode');
-                    moonIcon.classList.add('hidden');
-                    sunIcon.classList.remove('hidden');
-                }
-            }
 
-            function toggleTheme() {
-                const isLight = body.classList.toggle('light-mode');
-                const newTheme = isLight ? 'light' : 'dark';
-                applyTheme(newTheme);
-                try {
-                    localStorage.setItem('qesq-theme', newTheme);
-                } catch(e) {
-                    console.error("No se pudo guardar el tema en localStorage.");
-                }
-            }
-            
-            const savedTheme = localStorage.getItem('qesq-theme');
-            if (savedTheme) {
-                applyTheme(savedTheme);
-            }
-            
-            // =========================================================================
-            //  EVENT LISTENERS
-            // =========================================================================
-            startButton.addEventListener('click', handleGameStart);
-            
-            restartButton.addEventListener('click', () => showModal(restartConfirmModal));
-            cancelRestartButton.addEventListener('click', () => hideModal(restartConfirmModal));
+            startButton.addEventListener('click', () => { initAudio(); hapticFeedback(40); retractLetterbox(); switchScreen('mode-selection-screen'); });
+            backToStartButton.addEventListener('click', () => { hapticFeedback(30); cinematicIntro(); switchScreen('start-screen'); });
+            modeCharactersButton.addEventListener('click', () => { hapticFeedback(40); initGame('characters'); });
+            modeCitiesButton.addEventListener('click', () => { hapticFeedback(40); initGame('cities'); });
+            modeFoodsButton.addEventListener('click', () => { hapticFeedback(40); initGame('foods'); });
+            restartButton.addEventListener('click', () => { hapticFeedback(30); showModal(restartConfirmModal); });
+            cancelRestartButton.addEventListener('click', () => { hapticFeedback(30); hideModal(restartConfirmModal); });
             confirmRestartButton.addEventListener('click', () => {
+                hapticFeedback(50);
                 hideModal(restartConfirmModal);
                 setTimeout(restartGame, 100); 
             });
-
-            howToPlayButton.addEventListener('click', () => showModal(instructionsModal));
-            closeInstructionsButton.addEventListener('click', () => hideModal(instructionsModal));
-            
-            themeToggleButton.addEventListener('click', toggleTheme);
-
-            document.getElementById('your-character').addEventListener('click', () => showImageModal(yourSecretCharacter.imgUrl, yourSecretCharacter.name));
-            
-            enlargedCharacterModal.addEventListener('click', () => {
-                if (!hasDragged) {
-                    hideModal(enlargedCharacterModal);
-                }
+            howToPlayButton.addEventListener('click', () => { initAudio(); hapticFeedback(40); retractLetterbox(); showModal(instructionsModal); });
+            closeInstructionsButton.addEventListener('click', () => {
+                hapticFeedback(30);
+                hideModal(instructionsModal);
+                if (document.getElementById('start-screen').classList.contains('is-active')) cinematicIntro();
             });
-
-            let pressTimer;
-
+            
+            yourCharacterContainer.addEventListener('click', () => {
+                if (!yourSecretCharacter.imgUrl) return;
+                showImageModal(yourSecretCharacter)
+            });
+            
             gameBoard.addEventListener('click', (e) => {
                 const cardElement = e.target.closest('.card-item');
                 if (!cardElement) return;
-
+                hapticFeedback([25, 30, 25]);
+                playSound('cardFlip');
                 const now = Date.now();
                 const timeSinceLastClick = now - lastClickTimestamp;
-
                 if (lastCardClicked !== cardElement || timeSinceLastClick > 400 || isEggActive) {
                     lastCardClicked = cardElement;
                     cardClickCount = 1;
                 } else {
                     cardClickCount++;
                 }
-                
                 lastClickTimestamp = now;
-
                 if (cardClickCount >= 7 && !isEggActive) { 
                     triggerEasterEggEffect();
                     cardClickCount = 0;
                 } else {
                     cardElement.classList.toggle('is-flipped');
-                    checkAllFlipped(cardElement);
+                    checkAllFlipped();
                 }
             });
-            
             gameBoard.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 const cardElement = e.target.closest('.card-item');
                 if (!cardElement) return;
-
-                const characterIndex = cardElement.dataset.index;
-                const character = shuffledCharacters[characterIndex];
-                showImageModal(character.imgUrl, character.name);
+                const itemIndex = cardElement.dataset.index;
+                const item = shuffledCharacters[itemIndex];
+                showImageModal(item);
             });
-
-            gameBoard.addEventListener('touchstart', (e) => {
-                const cardElement = e.target.closest('.card-item');
-                if (!cardElement) return;
-                
-                pressTimer = setTimeout(() => {
-                    e.preventDefault();
-                    const characterIndex = cardElement.dataset.index;
-                    const character = shuffledCharacters[characterIndex];
-                    showImageModal(character.imgUrl, character.name);
-                }, 500); 
-            }, { passive: true });
-
-            gameBoard.addEventListener('touchend', () => {
-                clearTimeout(pressTimer);
-            });
-            gameBoard.addEventListener('touchmove', () => {
-                clearTimeout(pressTimer);
-            });
-
+            gameBoard.addEventListener('touchstart', (e) => {}, { passive: true });
             enlargedImageContainer.addEventListener('mousedown', dragStart);
             enlargedImageContainer.addEventListener('touchstart', dragStart, { passive: false });
-
             window.addEventListener('mousemove', dragMove);
             window.addEventListener('touchmove', dragMove, { passive: false });
-
             window.addEventListener('mouseup', dragEnd);
             window.addEventListener('touchend', dragEnd);
-            
             [instructionsModal, restartConfirmModal].forEach(modal => {
                  modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
                         hideModal(modal);
+                        if (modal.id === 'instructions-modal' && document.getElementById('start-screen').classList.contains('is-active')) cinematicIntro();
                     }
                 });
             });
-
+            enlargedCharacterModal.addEventListener('click', (e) => {
+                if (e.target.closest('.enlarged-image-container')) return;
+                if (!hasDragged) hideModal(enlargedCharacterModal);
+            });
+            document.querySelectorAll('.btn-cinematic, #restart-button').forEach(btn => btn.addEventListener('mouseenter', () => playSound('uiHover', 'C5')));
+            
+            document.addEventListener('click', initAudio, { once: true });
+            document.addEventListener('touchstart', initAudio, { once: true });
+            if (startScreen.classList.contains('is-active')) {
+                startFlickerSound();
+            }
         });
     </script>
 </body>
